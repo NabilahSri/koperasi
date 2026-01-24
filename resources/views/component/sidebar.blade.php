@@ -141,6 +141,8 @@
                                 href="{{ url('histori/simpanan') }}"> Simpanan </a></li>
                         <li class="menu-item {{ request()->is('histori/tagihan') ? 'active' : '' }}"><a
                                 href="{{ url('histori/tagihan') }}"> Tagihan </a></li>
+                        <li class="menu-item {{ request()->is('histori/pengambilan') ? 'active' : '' }}"><a
+                                href="{{ url('histori/pengambilan') }}"> Pengambilan Tabungan </a></li>
                     </ul>
                     <span class='submenu-opener'><i class='bi bi-chevron-right'></i></span>
                 </li>

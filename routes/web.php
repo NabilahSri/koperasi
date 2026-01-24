@@ -109,6 +109,7 @@ Route::middleware(['statuslogin'])->group(function () {
     //Riwayat
     Route::get('/histori/simpanan', [HistoryController::class, 'simpanan']);
     Route::get('/histori/tagihan', [HistoryController::class, 'tagihan']);
+    Route::get('/histori/pengambilan', [HistoryController::class, 'pengambilan']);
 });
 
 Route::post('/login', [LoginController::class, 'auth']);
