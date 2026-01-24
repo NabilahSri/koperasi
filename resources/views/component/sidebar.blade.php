@@ -52,6 +52,11 @@
                 <li class="menu-item {{ request()->is('simpanan') ? 'active' : '' }}"><a
                         href="{{ url('simpanan') }}"><span class="nav-icon flex-shrink-0"><i
                                 class="bi bi-wallet2 fs-18"></i></span> <span class="nav-text">Simpanan</span></a></li>
+                <!-- Ambil Tabungan -->
+                <li class="menu-item {{ request()->is('pengambilan*') ? 'active' : '' }}"><a
+                        href="{{ url('pengambilan') }}"><span class="nav-icon flex-shrink-0"><i
+                                class="bi bi-cash-stack fs-18"></i></span> <span class="nav-text">Ambil
+                            Tabungan</span></a></li>
                 <!-- Tagihan -->
                 <li class="menu-item menu-item-has-children {{ request()->is('tagihan*') ? 'active' : '' }}"><a
                         href="javascript:void(0);"> <span class="nav-icon flex-shrink-0"><i
@@ -73,7 +78,8 @@
                 <!-- Activity Log -->
                 <li class="menu-item {{ request()->is('activity/logs') ? 'active' : '' }}"><a
                         href="{{ url('activity/logs') }}"><span class="nav-icon flex-shrink-0"><i
-                                class="bi bi-journal-text fs-18"></i></span> <span class="nav-text">Activity Log</span></a></li>
+                                class="bi bi-journal-text fs-18"></i></span> <span class="nav-text">Activity
+                            Log</span></a></li>
                 <!-- Pengaturan -->
                 <li class="menu-item {{ request()->is('pengaturan') ? 'active' : '' }}"><a
                         href="{{ url('pengaturan') }}"><span class="nav-icon flex-shrink-0"><i

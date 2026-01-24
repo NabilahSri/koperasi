@@ -13,6 +13,7 @@ use App\Http\Controllers\UserAdminController;
 use App\Http\Controllers\UserAnggotaController;
 use App\Http\Controllers\TagihanController;
 use App\Http\Controllers\ActivityLogController;
+use App\Http\Controllers\PengambilanSimpananController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -98,6 +99,12 @@ Route::middleware(['statuslogin'])->group(function () {
     //Activity Logs
     Route::get('/activity/logs', [ActivityLogController::class, 'index'])->name('activity.logs');
     Route::get('/activity/logs/export', [ActivityLogController::class, 'export'])->name('activity.logs.export');
+
+    // Pengambilan Tabungan
+    Route::get('/pengambilan', [PengambilanSimpananController::class, 'index'])->name('pengambilan.index');
+    Route::get('/pengambilan/create', [PengambilanSimpananController::class, 'create'])->name('pengambilan.create');
+    Route::post('/pengambilan/store', [PengambilanSimpananController::class, 'store'])->name('pengambilan.store');
+    Route::get('/pengambilan/getSaldo/{userId}/{kategoriId}', [PengambilanSimpananController::class, 'getSaldo']);
 
     //Riwayat
     Route::get('/histori/simpanan', [HistoryController::class, 'simpanan']);
