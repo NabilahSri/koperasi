@@ -29,7 +29,7 @@ class TagihanController extends Controller
             'id_user' => $validasi->id_user,
             'id_pengajuan' => $validasi->id,
             'id_kategori' => $request->id_kategori,
-            'jumlah' => $request->jumlah,
+            'jumlah' => preg_replace('/[^0-9]/', '', $request->jumlah),
             'tanggal' => $request->tanggal,
             'keterangan' => $request->keterangan,
         ]);
