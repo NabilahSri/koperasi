@@ -107,7 +107,7 @@
                                                                                         User/Anggota</label>
                                                                                     <select name="id_user"
                                                                                         class="form-control" required>
-                                                                                        <option value="{{ $item->id }}"
+                                                                                        <option value="{{ $item->id_user }}"
                                                                                             selected>
                                                                                             {{ $item->user->name }}
                                                                                         </option>

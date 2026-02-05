@@ -3,7 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\Kategori;
+use App\Models\TransaksiS;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\Support\Facades\Storage;
 
@@ -41,7 +44,7 @@ class UserAdminController extends Controller
             $photoKTP = null;
         }
 
-        User::create([
+        $user = User::create([
             'no_user' => $req->no_user,
             'name' => $req->name,
             'email' => $req->email,
@@ -50,9 +53,37 @@ class UserAdminController extends Controller
             'password' => bcrypt($req->password),
             'foto' => $photoPath,
             'ktp' => $photoKTP,
-            'iuran_wajib' => $req->iuran_wajib,
             'role' => 'admin'
         ]);
+
+        if ($user) {
+            $kategoriPokok = Kategori::where('nama', 'Iuran Pokok')->first();
+            $kategoriWajib = Kategori::where('nama', 'Iuran Wajib')->first();
+
+            if ($req->iuran_pokok && $kategoriPokok) {
+                TransaksiS::create([
+                    'id_user' => $user->id,
+                    'id_kategori' => $kategoriPokok->id,
+                    'id_petugas' => Auth::id(),
+                    'nama_penyetor' => $user->name,
+                    'jumlah' => str_replace(['Rp ', '.'], '', $req->iuran_pokok),
+                    'tanggal' => date('Y-m-d'),
+                    'keterangan' => 'Iuran Pokok',
+                ]);
+            }
+
+            if ($req->iuran_wajib && $kategoriWajib) {
+                TransaksiS::create([
+                    'id_user' => $user->id,
+                    'id_kategori' => $kategoriWajib->id,
+                    'id_petugas' => Auth::id(),
+                    'nama_penyetor' => $user->name,
+                    'jumlah' => str_replace(['Rp ', '.'], '', $req->iuran_wajib),
+                    'tanggal' => date('Y-m-d'),
+                    'keterangan' => 'Iuran Wajib',
+                ]);
+            }
+        }
 
         return redirect('/users/admin');
     }
@@ -66,8 +97,6 @@ class UserAdminController extends Controller
             'email' => $req->email,
             'alamat' => $req->alamat,
             'nohp' => $req->nohp,
-            'iuran_wajib' => $req->iuran_wajib,
-            'iuran_pokok' => $req->iuran_pokok,
             'role' => 'admin'
         ];
         if (!empty($req->password)) {
@@ -103,7 +132,7 @@ class UserAdminController extends Controller
         $user->fill($userData);
         $user->save();
 
-        // return redirect('/users/admin');
+        return redirect('/users/admin');
     }
 
     public function delete(Request $req)

@@ -26,22 +26,18 @@ class DatabaseSeeder extends Seeder
             'alamat' => 'Tasikmalaya',
             'nohp' => '081234567890',
             'password' => bcrypt('12341234'),
-            'iuran_wajib' => '50000',
-            'iuran_pokok' => '50000',
             'role' => 'admin',
         ]);
 
-        \App\Models\User::factory()->create([
-            'no_user' => '002',
-            'name' => 'Nabilah Sri Mulyani',
-            'email' => 'nabilah@gmail.com',
-            'alamat' => 'Tasikmalaya',
-            'nohp' => '081234567890',
-            'password' => bcrypt('12341234'),
-            'iuran_wajib' => '70000',
-            'iuran_pokok' => '50000',
-            'role' => 'anggota',
-        ]);
+        // \App\Models\User::factory()->create([
+        //     'no_user' => '002',
+        //     'name' => 'Nabilah Sri Mulyani',
+        //     'email' => 'nabilah@gmail.com',
+        //     'alamat' => 'Tasikmalaya',
+        //     'nohp' => '081234567890',
+        //     'password' => bcrypt('12341234'),
+        //     'role' => 'anggota',
+        // ]);
 
         Jenis::create([
             'nama' => 'Simpanan'

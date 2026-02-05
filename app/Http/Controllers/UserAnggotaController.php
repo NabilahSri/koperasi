@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\TransaksiS;
+use App\Models\Kategori;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\Support\Facades\Storage;
 
@@ -52,19 +54,35 @@ class UserAnggotaController extends Controller
             'password' => bcrypt($req->password),
             'foto' => $photoPath,
             'ktp' => $photoKTP,
-            'iuran_wajib' => $req->iuran_wajib,
-            'iuran_pokok' => $req->iuran_pokok,
             'role' => 'anggota'
         ]);
         if ($user) {
-            TransaksiS::create([
-                'id_user' => $user->id,
-                'id_kategori' => '1',
-                'nama_penyetor' => $user->name,
-                'jumlah' => $req->iuran_pokok,
-                'tanggal' => date('Y-m-d'),
-                'keterangan' => '-',
-            ]);
+            $kategoriPokok = Kategori::where('nama', 'Iuran Pokok')->first();
+            $kategoriWajib = Kategori::where('nama', 'Iuran Wajib')->first();
+
+            if ($req->iuran_pokok && $kategoriPokok) {
+                TransaksiS::create([
+                    'id_user' => $user->id,
+                    'id_kategori' => $kategoriPokok->id,
+                    'id_petugas' => Auth::id(),
+                    'nama_penyetor' => $user->name,
+                    'jumlah' => $req->iuran_pokok,
+                    'tanggal' => date('Y-m-d'),
+                    'keterangan' => 'Iuran Pokok',
+                ]);
+            }
+
+            if ($req->iuran_wajib && $kategoriWajib) {
+                TransaksiS::create([
+                    'id_user' => $user->id,
+                    'id_kategori' => $kategoriWajib->id,
+                    'id_petugas' => Auth::id(),
+                    'nama_penyetor' => $user->name,
+                    'jumlah' => $req->iuran_wajib,
+                    'tanggal' => date('Y-m-d'),
+                    'keterangan' => 'Iuran Wajib',
+                ]);
+            }
         }
 
         return redirect('/users/anggota');
@@ -79,8 +97,6 @@ class UserAnggotaController extends Controller
             'email' => $req->email,
             'alamat' => $req->alamat,
             'nohp' => $req->nohp,
-            'iuran_wajib' => $req->iuran_wajib,
-            'iuran_pokok' => $req->iuran_pokok,
             'role' => 'anggota'
         ];
         if (!empty($req->password)) {

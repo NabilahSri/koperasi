@@ -26,8 +26,6 @@
                                             <th>No</th>
                                             <th>Anggota</th>
                                             <th>Email</th>
-                                            <th>Iuran Wajib</th>
-                                            <th>Iuran Pokok</th>
                                             <th>No Hp</th>
                                             <th>Aksi</th>
                                         </tr>
@@ -48,10 +46,6 @@
                                                     </div>
                                                 </td>
                                                 <td>{{ $item->email }}</td>
-                                                <td>{{ 'Rp ' . number_format($item->iuran_wajib !== null ? $item->iuran_wajib : 0, 0, ',', '.') }}
-                                                </td>
-                                                <td>{{ 'Rp ' . number_format($item->iuran_pokok !== null ? $item->iuran_pokok : 0, 0, ',', '.') }}
-                                                </td>
                                                 <td>{{ $item->nohp }}</td>
                                                 <td class="text-center">
                                                     <a href="#"
@@ -163,42 +157,6 @@
                                                                                 <label
                                                                                     class="form-label small text-muted fw-bold">Alamat</label>
                                                                                 <textarea rows="3" name="alamat" class="form-control" required>{{ $item->alamat }}</textarea>
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-
-                                                                    <!-- Section 3: Keuangan -->
-                                                                    <div class="col-12">
-                                                                        <h6 class="text-primary fw-bold mb-3"><i
-                                                                                class="bi bi-cash-coin me-2"></i>Informasi
-                                                                            Keuangan</h6>
-                                                                        <div
-                                                                            class="p-3 bg-primary-subtle border-primary-subtle">
-                                                                            <div class="row g-3">
-                                                                                <div class="col-md-6">
-                                                                                    <label
-                                                                                        class="form-label small text-primary fw-bold">Iuran
-                                                                                        Wajib</label>
-                                                                                    <div class="input-group">
-                                                                                        <input type="text"
-                                                                                            class="form-control fw-bold currency-input"
-                                                                                            name="iuran_wajib"
-                                                                                            value="{{ $item->iuran_wajib }}"
-                                                                                            required>
-                                                                                    </div>
-                                                                                </div>
-                                                                                <div class="col-md-6">
-                                                                                    <label
-                                                                                        class="form-label small text-primary fw-bold">Iuran
-                                                                                        Pokok</label>
-                                                                                    <div class="input-group">
-                                                                                        <input type="text"
-                                                                                            class="form-control fw-bold currency-input"
-                                                                                            name="iuran_pokok"
-                                                                                            value="{{ $item->iuran_pokok }}"
-                                                                                            required>
-                                                                                    </div>
-                                                                                </div>
                                                                             </div>
                                                                         </div>
                                                                     </div>
@@ -337,7 +295,7 @@
                                                 <div class="col-12">
                                                     <h6 class="text-primary fw-bold mb-3"><i
                                                             class="bi bi-cash-coin me-2"></i>Informasi Keuangan</h6>
-                                                    <div class="p-3 bg-primary-subtle border-primary-subtle">
+                                                    <div class="p-3 bg-primary-subtle  border-primary-subtle">
                                                         <div class="row g-3">
                                                             <div class="col-md-6">
                                                                 <label class="form-label small text-primary fw-bold">Iuran
@@ -371,7 +329,7 @@
                                                                 <small>(JPG/PNG, Max
                                                                     2MB)</small></label>
                                                             <input type="file" class="form-control mb-2"
-                                                                name="ktp" required accept=".jpg,.jpeg,.png"
+                                                                name="ktp" accept=".jpg,.jpeg,.png"
                                                                 onchange="previewImage(this, 'preview-ktp-add')">
                                                             <img id="preview-ktp-add" class="img-thumbnail"
                                                                 style="max-height: 150px; display: none;">
@@ -381,7 +339,7 @@
                                                                 <small>(JPG/PNG, Max
                                                                     2MB)</small></label>
                                                             <input type="file" class="form-control mb-2"
-                                                                name="foto" required accept=".jpg,.jpeg,.png"
+                                                                name="foto" accept=".jpg,.jpeg,.png"
                                                                 onchange="previewImage(this, 'preview-foto-add')">
                                                             <img id="preview-foto-add" class="img-thumbnail"
                                                                 style="max-height: 150px; display: none;">

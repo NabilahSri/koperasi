@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Jenis;
+use App\Models\Kategori;
 use App\Models\Pengajuan;
 use Illuminate\Http\Request;
 use App\Models\TransaksiT;
@@ -21,38 +22,36 @@ class TagihanController extends Controller
         return view('pages.tagihan', $data);
     }
 
-    public function create(Request $request)
+    public function create(Request $request, $id)
     {
-        $validasi = Pengajuan::where('id', $request->id)->first();
+        $validasi = Pengajuan::where('id', $id)->first();
 
-        $data = TransaksiT::create([
-            'id_user' => $validasi->id_user,
-            'id_pengajuan' => $validasi->id,
-            'id_kategori' => $request->id_kategori,
-            'jumlah' => preg_replace('/[^0-9]/', '', $request->jumlah),
-            'tanggal' => $request->tanggal,
-            'keterangan' => $request->keterangan,
-        ]);
-
-        $tagihan = TransaksiT::where('id_pengajuan', $validasi->id)->get();
-
-        $ttlpembayaran = 0;
-        $sisapembayaran = 0;
-        foreach ($tagihan as $tagihan) {
-            if ($tagihan->id_pengajuan == $validasi->id &&  $tagihan->id_kategori ==  $request->id_kategori) {
-                $ttlpembayaran +=  $tagihan->jumlah;
+        if ($request->has('transaksi')) {
+            foreach ($request->transaksi as $item) {
+                $jumlah = preg_replace('/[^0-9]/', '', $item['jumlah']);
+                if ($jumlah > 0) {
+                    TransaksiT::create([
+                        'id_user' => $validasi->id_user,
+                        'id_pengajuan' => $validasi->id,
+                        'id_kategori' => $item['id_kategori'],
+                        'jumlah' => $jumlah,
+                        'tanggal' => $request->tanggal,
+                        'keterangan' => $request->keterangan,
+                    ]);
+                }
             }
         }
 
-        // if ($request->id_kategori == 3) {
-        //     $sisapembayaran = $validasi->nominal_pinjaman -  $ttlpembayaran;
-        // } elseif ($request->id_kategori == 4) {
-        //     $sisapembayaran = $validasi->nominal_bagihasil -  $ttlpembayaran;
-        // }
-        // if ($tagihan->jumlah == $sisapembayaran) {
-        //     Pengajuan::where('id', $request->id)->update(['keterangan' => 'sudah lunas']);
-        // }
-        if ($ttlpembayaran >= $validasi->nominal_pinjaman + $validasi->nominal_bagihasil) {
+        $tagihan = TransaksiT::where('id_pengajuan', $validasi->id)->get();
+        // $ttlpembayaran = $tagihan->sum('jumlah');
+
+        // Cari ID kategori Pinjaman
+        $kategoriPinjaman = Kategori::where('nama', 'Pinjaman')->first();
+        $idPinjaman = $kategoriPinjaman ? $kategoriPinjaman->id : 3; // Default ke 3 jika tidak ditemukan
+
+        $total_bayar_pinjaman = $tagihan->where('id_kategori', $idPinjaman)->sum('jumlah');
+
+        if ($total_bayar_pinjaman >= $validasi->nominal_pinjaman) {
             Pengajuan::where('id', $validasi->id)->update(['keterangan' => 'sudah lunas']);
         }
 

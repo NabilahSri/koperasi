@@ -14,6 +14,7 @@ use App\Http\Controllers\UserAnggotaController;
 use App\Http\Controllers\TagihanController;
 use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\PengambilanSimpananController;
+use App\Http\Controllers\TunggakanController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -75,6 +76,9 @@ Route::middleware(['statuslogin'])->group(function () {
     Route::post('/users/anggota/create', [UserAnggotaController::class, 'create']);
     Route::post('/users/anggota/edit/{id}', [UserAnggotaController::class, 'edit']);
     Route::get('/users/anggota/delete/{id}', [UserAnggotaController::class, 'delete']);
+
+    //Tunggakan
+    Route::get('/tunggakan', [TunggakanController::class, 'index']);
 
     //Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index']);

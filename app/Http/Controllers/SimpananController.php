@@ -17,6 +17,7 @@ class SimpananController extends Controller
         $data['kategori'] = Jenis::select('jenis.*', 'kategori.*')
             ->join('kategori', 'jenis.id', '=', 'kategori.id_jenis')
             ->where('jenis.nama', '=', 'Simpanan')
+            ->where('kategori.nama', '!=', 'Iuran Pokok')
             ->get();
         $data['simpanan'] = TransaksiS::with('user')->with('kategori')->with('petugas')->orderBy('created_at', 'desc')->get();
         return view('pages.simpanan', $data);

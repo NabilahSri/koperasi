@@ -64,10 +64,6 @@
                                             <td>{{ $item->name }}</td>
                                             <td>{{ $item->alamat }}</td>
                                             @foreach ($kategori as $data)
-                                                {{-- @if ($data->id == 1)
-                                                    <td>Rp. {{ number_format($item->iuran_pokok) }}</td> 
-                                                @endif --}}
-                                                {{-- @if ($data->id == 2) --}}
                                                 @if($data->jenis->nama == 'Simpanan')
                                                     @if (isset($simpanan[$item->id][$data->id]))
                                                         <td>Rp. {{ number_format($simpanan[$item->id][$data->id]) }}</td>

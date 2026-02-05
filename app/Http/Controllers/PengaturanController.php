@@ -24,6 +24,8 @@ class PengaturanController extends Controller
             'pimpinan' => $req->pimpinan,
             'alamat' => $req->alamat,
             'nohp' => $req->nohp,
+            'tenggat_iuran_wajib' => $req->tenggat_iuran_wajib,
+            'tenggat_bayar_tagihan' => $req->tenggat_bayar_tagihan,
         ];
 
         if ($req->hasFile('logo')) {

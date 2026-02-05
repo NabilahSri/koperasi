@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Models;
+
 use App\Models\TransaksiS;
 use App\Models\Pengajuan;
 use App\Traits\Auditable;
@@ -22,11 +23,13 @@ class User extends Authenticatable
      */
     protected $guarded = [];
 
-    public function transaksi_simpanan() {
+    public function transaksi_simpanan()
+    {
         return $this->hasMany(TransaksiS::class, 'id');
     }
 
-     public function pengajuan() {
+    public function pengajuan()
+    {
         return $this->hasMany(Pengajuan::class, 'id');
     }
 

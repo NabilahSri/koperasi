@@ -40,6 +40,10 @@
                     </ul>
                     <span class='submenu-opener'><i class='bi bi-chevron-right'></i></span>
                 </li>
+                <!-- Tunggakan -->
+                <li class="menu-item {{ request()->is('tunggakan') ? 'active' : '' }}"><a
+                        href="{{ url('tunggakan') }}"><span class="nav-icon flex-shrink-0"><i
+                                class="bi bi-exclamation-circle fs-18"></i></span> <span class="nav-text">Info Tunggakan</span></a></li>
                 <!-- Jenis -->
                 <li class="menu-item {{ request()->is('jenis') ? 'active' : '' }}"><a href="{{ url('jenis') }}"><span
                             class="nav-icon flex-shrink-0"><i class="bi bi-card-text fs-18"></i></span> <span

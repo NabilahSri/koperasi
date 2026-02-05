@@ -25,7 +25,7 @@
                                         <th>Jumlah Pinjaman</th>
                                         <th>Sisa Pinjaman</th>
                                         <th>Jumlah Bagi Hasil</th>
-                                        <th>Sisa Bagi Hasil</th>
+                                        <th>Total Bagi Hasil Terbayar</th>
                                         <th>Tanggal Pengajuan</th>
                                         <th>Aksi</th>
                                     </tr>
@@ -58,9 +58,10 @@
                                             <td>Rp
                                                 {{ number_format($item->nominal_pinjaman - $total_pembayaran, 0, ',', '.') }}
                                             </td>
-                                            <td>Rp {{ number_format($item->nominal_bagihasil, 0, ',', '.') }}</td>
+                                            <td>Rp {{ number_format($item->nominal_bagihasil, 0, ',', '.') }}
+                                            </td>
                                             <td>Rp
-                                                {{ number_format($item->nominal_bagihasil - $total_bagihasil, 0, ',', '.') }}
+                                                {{ number_format($total_bagihasil, 0, ',', '.') }}
                                             </td>
                                             <td>{{ \Carbon\Carbon::parse($item->tanggal_pengajuan)->locale('id')->isoFormat('D MMMM YYYY') }}
                                             </td>
@@ -120,32 +121,61 @@
                                                                         Pembayaran</h6>
                                                                     <div
                                                                         class="p-3 bg-primary-subtle border-primary-subtle rounded">
-                                                                        <div class="row g-3">
-                                                                            <div class="col-md-6">
-                                                                                <label
-                                                                                    class="form-label small text-primary fw-bold">Kategori
-                                                                                    Pembayaran</label>
-                                                                                <select name="id_kategori"
-                                                                                    id="kategoriPeminjaman"
-                                                                                    class="form-control" required>
-                                                                                    @foreach ($kategori as $data)
-                                                                                        <option value="{{ $data->id }}"
-                                                                                            data-type="{{ $data->type }}">
-                                                                                            {{ $data->nama }}
-                                                                                        </option>
-                                                                                    @endforeach
-                                                                                </select>
-                                                                            </div>
-                                                                            <div class="col-md-6">
-                                                                                <label
-                                                                                    class="form-label small text-primary fw-bold">Jumlah
-                                                                                    Pembayaran</label>
-                                                                                <input type="text"
-                                                                                    class="form-control fw-bold currency-input"
-                                                                                    name="jumlah" placeholder="Rp. 0"
-                                                                                    required>
-                                                                                </input>
-                                                                            </div>
+                                                                        <div class="row g-3"
+                                                                            style="max-height: 400px; overflow-y: auto;">
+                                                                            @foreach ($kategori as $data)
+                                                                                @php
+                                                                                    $isBagiHasil =
+                                                                                        $data->id == 4 ||
+                                                                                        stripos(
+                                                                                            $data->nama,
+                                                                                            'Bagi Hasil',
+                                                                                        ) !== false;
+                                                                                    $inputValue = '';
+                                                                                    $readonlyAttribute = '';
+                                                                                    $bgStyle = '';
+
+                                                                                    if ($isBagiHasil) {
+                                                                                        // $sisaBagiHasil = max(0, $item->nominal_bagihasil - $total_bagihasil);
+                                                                                        $inputValue =
+                                                                                            'Rp. ' .
+                                                                                            number_format(
+                                                                                                $item->nominal_bagihasil,
+                                                                                                0,
+                                                                                                ',',
+                                                                                                '.',
+                                                                                            );
+                                                                                        $readonlyAttribute = 'readonly';
+                                                                                        $bgStyle =
+                                                                                            'background-color: #e9ecef;';
+                                                                                    }
+                                                                                @endphp
+                                                                                <div class="col-12">
+                                                                                    <div
+                                                                                        class="card border shadow-none hover-shadow-sm transition-all">
+                                                                                        <div
+                                                                                            class="card-body py-2 px-3 d-flex align-items-center justify-content-between">
+                                                                                            <label
+                                                                                                class="form-label mb-0 fw-medium text-dark flex-grow-1">
+                                                                                                {{ $data->nama }}
+                                                                                            </label>
+                                                                                            <div class="input-group"
+                                                                                                style="width: 200px;">
+                                                                                                <input type="hidden"
+                                                                                                    name="transaksi[{{ $data->id }}][id_kategori]"
+                                                                                                    value="{{ $data->id }}">
+                                                                                                <input type="text"
+                                                                                                    class="form-control fw-bold text-end currency-input"
+                                                                                                    name="transaksi[{{ $data->id }}][jumlah]"
+                                                                                                    placeholder="Rp 0"
+                                                                                                    value="{{ $inputValue }}"
+                                                                                                    {{ $readonlyAttribute }}
+                                                                                                    style="{{ $bgStyle }}">
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                </div>
+                                                                            @endforeach
                                                                             <div class="col-12">
                                                                                 <label
                                                                                     class="form-label small text-primary fw-bold">Keterangan</label>

@@ -20,6 +20,9 @@ class LaporanController extends Controller
     {
         $data['kategori'] = Kategori::orderBy('id_jenis')->get();
         $data['user'] = User::all();
+        $data['simpanan'] = [];
+        $data['tagihan'] = [];
+
         $simpanan = TransaksiS::select('id_user', 'id_kategori', DB::raw('SUM(jumlah) AS jumlah'))->groupBy('id_user', 'id_kategori')
             ->get();
         $tagihan = TransaksiT::select('id_user', 'id_kategori', DB::raw('SUM(jumlah) AS jumlah'))->groupBy('id_user', 'id_kategori')->get();
@@ -39,20 +42,23 @@ class LaporanController extends Controller
 
     public function filterData(Request $request)
     {
-        $data['kategori'] = Kategori::all();
+        $data['kategori'] = Kategori::orderBy('id_jenis')->get();
 
         $selectedMonth = $request->input('filter_month');
         Session::put('filtered_month', $selectedMonth);
         $formattedMonth = Carbon::parse($selectedMonth)->format('m');
+        $formattedYear = Carbon::parse($selectedMonth)->format('Y');
 
         // Query untuk mendapatkan data sesuai dengan bulan yang dipilih
         $simpanan = TransaksiS::select('id_user', 'id_kategori', DB::raw('SUM(jumlah) AS jumlah'))
             ->whereMonth('tanggal', '=', $formattedMonth)
+            ->whereYear('tanggal', '=', $formattedYear)
             ->groupBy('id_user', 'id_kategori')
             ->get();
 
         $tagihan = TransaksiT::select('id_user', 'id_kategori', DB::raw('SUM(jumlah) AS jumlah'))
             ->whereMonth('tanggal', '=', $formattedMonth)
+            ->whereYear('tanggal', '=', $formattedYear)
             ->groupBy('id_user', 'id_kategori')
             ->get();
 
@@ -81,94 +87,88 @@ class LaporanController extends Controller
     public function export()
     {
         $users = User::all();
+        $kategoriList = Kategori::with('jenis')->orderBy('id_jenis')->get();
+        
+        // Pre-fetch all transactions to avoid N+1
+        $simpananData = TransaksiS::select('id_user', 'id_kategori', DB::raw('SUM(jumlah) AS jumlah'))
+            ->groupBy('id_user', 'id_kategori')
+            ->get();
+            
+        $tagihanData = TransaksiT::select('id_user', 'id_kategori', DB::raw('SUM(jumlah) AS jumlah'))
+            ->groupBy('id_user', 'id_kategori')
+            ->get();
+            
+        $lookup = [];
+        foreach ($simpananData as $s) {
+            $lookup[$s->id_user][$s->id_kategori] = $s->jumlah;
+        }
+        foreach ($tagihanData as $t) {
+            $lookup[$t->id_user][$t->id_kategori] = $t->jumlah;
+        }
+
         $data = [];
+        $headings = ['No', 'No Anggota', 'Nama', 'Alamat'];
+        foreach ($kategoriList as $k) {
+            $headings[] = $k->nama;
+        }
+        $headings[] = 'Jumlah Simpanan';
+        $headings[] = 'Jumlah Tagihan';
+
+        $colTotals = [];
+        foreach ($kategoriList as $k) {
+            $colTotals[$k->id] = 0;
+        }
+        $grandTotalSimpanan = 0;
+        $grandTotalTagihan = 0;
 
         foreach ($users as $key => $user) {
             $rowData = [
-                'No' => $key + 1,
-                'No Anggota' => $user->no_user,
-                'Nama' => $user->name,
-                'Alamat' => $user->alamat,
-                'Iuran Pokok' => $user->iuran_pokok,
-                'Iuran Wajib' => $this->getTransactionAmount($user->id, 'Iuran Wajib', TransaksiS::class) ?: '-',
-                'Jumlah Simpanan ' . $user->name => $this->getTotalTransactionAmount($user->id, TransaksiS::class) ?: '-',
-                'Pinjaman' => $this->getTransactionAmount($user->id, 'pinjaman', TransaksiT::class) ?: '-',
-                'Bagi Hasil' => $this->getTransactionAmount($user->id, 'bagihasil', TransaksiT::class) ?: '-',
-                'Jumlah Tagihan ' . $user->name => $this->getTotalTransactionAmount($user->id, TransaksiT::class) ?: '-',
+                $key + 1,
+                $user->no_user,
+                $user->name,
+                $user->alamat,
             ];
+
+            $userTotalSimpanan = 0;
+            $userTotalTagihan = 0;
+
+            foreach ($kategoriList as $k) {
+                $amount = $lookup[$user->id][$k->id] ?? 0;
+                $rowData[] = $amount ?: '-';
+                
+                $colTotals[$k->id] += $amount;
+
+                // Determine type for row totals
+                // Assuming 'Simpanan' and 'Pinjaman' are the types in Jenis
+                // We can also check if the amount came from TransaksiS or TransaksiT logic
+                // But since we merged lookup, we rely on Kategori Jenis.
+                if ($k->jenis && stripos($k->jenis->nama, 'Simpanan') !== false) {
+                    $userTotalSimpanan += $amount;
+                } else {
+                    $userTotalTagihan += $amount;
+                }
+            }
+
+            $rowData[] = $userTotalSimpanan ?: '-';
+            $rowData[] = $userTotalTagihan ?: '-';
+            
+            $grandTotalSimpanan += $userTotalSimpanan;
+            $grandTotalTagihan += $userTotalTagihan;
 
             $data[] = $rowData;
         }
 
-        $totalKategoriSimpananPokok = User::sum('iuran_pokok');
-        $totalKategoriSimpananWajib = $this->getTotalByKategori('Iuran Wajib', TransaksiS::class) ?: '-';
-        $totalKategoriPinjaman = $this->getTotalByKategori('Pinjaman', TransaksiT::class) ?: '-';
-        $totalKategoriBagihasil = $this->getTotalByKategori('Bagihasil', TransaksiT::class);
-        $totalSimpananSemuaAnggota = $this->getTotalTransactionAmountSemuaAnggota(TransaksiS::class) ?: '-';
-        $totalTagihanSemuaAnggota = $this->getTotalTransactionAmountSemuaAnggota(TransaksiT::class) ?: '-';
-
-        $dataRowSemuaAnggota = [
-            'No' => '',
-            'No Anggota' => '',
-            'Nama' => '',
-            'Alamat' => '',
-            'Iuran Pokok' => $totalKategoriSimpananPokok,
-            'Iuran Wajib' => $totalKategoriSimpananWajib,
-            'Jumlah Simpanan' => $totalSimpananSemuaAnggota,
-            'Pinjaman' => $totalKategoriPinjaman,
-            'Bagi Hasil' => $totalKategoriBagihasil,
-            'Jumlah Tagihan' => $totalTagihanSemuaAnggota,
-        ];
-
-        $data[] = $dataRowSemuaAnggota;
-
-        return Excel::download(new LaporanExport($data), 'Laporan Master Koperasi.xlsx');
-    }
-
-    protected function getTransactionAmount($userId, $kategori, $model)
-    {
-        $kategoriId = Kategori::where('nama', $kategori)->value('id');
-
-        return $model::where('id_user', $userId)
-            ->where('id_kategori', $kategoriId)
-            ->sum('jumlah');
-    }
-
-    protected function getTotalTransactionAmount($userId, $model)
-    {
-        if ($model == TransaksiS::class) {
-            $jumlahwajib = $model::where('id_user', $userId)
-                ->sum('jumlah');
-            $jumlahpokok = User::where('id', $userId)
-                ->sum('iuran_pokok');
-            $totalsimpanan = $jumlahwajib += $jumlahpokok;
-        } else {
-            $totalsimpanan = $model::where('id_user', $userId)
-                ->sum('jumlah');
+        // Total Row
+        $totalRow = ['', '', '', ''];
+        foreach ($kategoriList as $k) {
+            $totalRow[] = $colTotals[$k->id] ?: '-';
         }
-        return $totalsimpanan;
-    }
+        $totalRow[] = $grandTotalSimpanan ?: '-';
+        $totalRow[] = $grandTotalTagihan ?: '-';
 
-    protected function getTotalTransactionAmountSemuaAnggota($model)
-    {
-        $total = 0;
+        $data[] = $totalRow;
 
-        foreach (User::all() as $user) {
-            $total += $this->getTotalTransactionAmount($user->id, $model);
-        }
-
-        return $total;
-    }
-
-    protected function getTotalByKategori($kategori, $model)
-    {
-        $total2 = 0;
-        foreach (User::all() as $user) {
-
-            $total2 += $this->getTransactionAmount($user->id,  $kategori, $model);
-        }
-
-        return $total2;
+        return Excel::download(new LaporanExport($data, $headings), 'Laporan Master Koperasi.xlsx');
     }
 
     //EXPORT FILTER DATA
@@ -176,123 +176,103 @@ class LaporanController extends Controller
     {
         $selectedMonth = Session::get('filtered_month');
         $formattedMonth = Carbon::parse($selectedMonth)->format('m');
+        $formattedYear = Carbon::parse($selectedMonth)->format('Y');
         $formattedMonth2 = Carbon::parse($selectedMonth)->locale('id')->isoFormat('MMMM YYYY');
+
+        $kategoriList = Kategori::with('jenis')->orderBy('id_jenis')->get();
 
         // Ambil semua user yang memiliki transaksi pada bulan tertentu
         $userIdsWithTransactions = [];
 
-        // Ambil id pengguna yang melakukan transaksi pada bulan tertentu dari TransaksiS
-        $usersWithTransactionsS = TransaksiS::whereMonth('tanggal', $formattedMonth)
-            ->pluck('id_user')
-            ->toArray();
-        $userIdsWithTransactions = array_merge($userIdsWithTransactions, $usersWithTransactionsS);
+        $simpananData = TransaksiS::select('id_user', 'id_kategori', DB::raw('SUM(jumlah) AS jumlah'))
+            ->whereMonth('tanggal', $formattedMonth)
+            ->whereYear('tanggal', $formattedYear)
+            ->groupBy('id_user', 'id_kategori')
+            ->get();
+            
+        $tagihanData = TransaksiT::select('id_user', 'id_kategori', DB::raw('SUM(jumlah) AS jumlah'))
+            ->whereMonth('tanggal', $formattedMonth)
+            ->whereYear('tanggal', $formattedYear)
+            ->groupBy('id_user', 'id_kategori')
+            ->get();
 
-        // Ambil id pengguna yang melakukan transaksi pada bulan tertentu dari TransaksiT
-        $usersWithTransactionsT = TransaksiT::whereMonth('tanggal', $formattedMonth)
-            ->pluck('id_user')
-            ->toArray();
-        $userIdsWithTransactions = array_merge($userIdsWithTransactions, $usersWithTransactionsT);
-
-        // Hilangkan duplikat pengguna yang memiliki transaksi pada bulan tertentu
+        $userIdsWithTransactions = array_merge(
+            $simpananData->pluck('id_user')->toArray(),
+            $tagihanData->pluck('id_user')->toArray()
+        );
         $userIdsWithTransactions = array_unique($userIdsWithTransactions);
 
         // Ambil data pengguna yang memiliki transaksi pada bulan tertentu
         $users = User::whereIn('id', $userIdsWithTransactions)->get();
 
+        $lookup = [];
+        foreach ($simpananData as $s) {
+            $lookup[$s->id_user][$s->id_kategori] = $s->jumlah;
+        }
+        foreach ($tagihanData as $t) {
+            $lookup[$t->id_user][$t->id_kategori] = $t->jumlah;
+        }
+
         $data = [];
+        $headings = ['No', 'No Anggota', 'Nama', 'Alamat'];
+        foreach ($kategoriList as $k) {
+            $headings[] = $k->nama;
+        }
+        $headings[] = 'Jumlah Simpanan';
+        $headings[] = 'Jumlah Tagihan';
+
+        $colTotals = [];
+        foreach ($kategoriList as $k) {
+            $colTotals[$k->id] = 0;
+        }
+        $grandTotalSimpanan = 0;
+        $grandTotalTagihan = 0;
 
         foreach ($users as $key => $user) {
             $rowData = [
-                'No' => $key + 1,
-                'No Anggota' => $user->no_user,
-                'Nama' => $user->name,
-                'Alamat' => $user->alamat,
-                'Iuran Pokok' => $user->iuran_pokok ?: '-',
-                'Iuran Wajib' => $this->getTransactionAmountFiltered($user->id, 'Iuran Wajib', TransaksiS::class, $formattedMonth) ?: '-',
-                'Jumlah Simpanan ' . $user->name => $this->getTotalTransactionAmountFiltered($user->id, TransaksiS::class, $formattedMonth) ?: '-',
-                'Pinjaman' => $this->getTransactionAmountFiltered($user->id, 'pinjaman', TransaksiT::class, $formattedMonth) ?: '-',
-                'Bagi Hasil' => $this->getTransactionAmountFiltered($user->id, 'bagihasil', TransaksiT::class, $formattedMonth) ?: '-',
-                'Jumlah Tagihan ' . $user->name => $this->getTotalTransactionAmountFiltered($user->id, TransaksiT::class, $formattedMonth) ?: '-',
+                $key + 1,
+                $user->no_user,
+                $user->name,
+                $user->alamat,
             ];
+
+            $userTotalSimpanan = 0;
+            $userTotalTagihan = 0;
+
+            foreach ($kategoriList as $k) {
+                $amount = $lookup[$user->id][$k->id] ?? 0;
+                $rowData[] = $amount ?: '-';
+                
+                $colTotals[$k->id] += $amount;
+
+                if ($k->jenis && stripos($k->jenis->nama, 'Simpanan') !== false) {
+                    $userTotalSimpanan += $amount;
+                } else {
+                    $userTotalTagihan += $amount;
+                }
+            }
+
+            $rowData[] = $userTotalSimpanan ?: '-';
+            $rowData[] = $userTotalTagihan ?: '-';
+            
+            $grandTotalSimpanan += $userTotalSimpanan;
+            $grandTotalTagihan += $userTotalTagihan;
 
             $data[] = $rowData;
         }
 
-        $totalKategoriSimpananPokok = User::whereIn('id', $userIdsWithTransactions)->sum('iuran_pokok');
-        $totalKategoriSimpananWajib = $this->TotalByKategoriFiltered('Iuran Wajib', TransaksiS::class, $formattedMonth) ?: '-';
-        $totalKategoriPinjaman = $this->TotalByKategoriFiltered('Pinjaman', TransaksiT::class, $formattedMonth) ?: '-';
-        $totalKategoriBagihasil = $this->TotalByKategoriFiltered('Bagihasil', TransaksiT::class, $formattedMonth) ?: '-';
-        $totalSimpananSemuaAnggota = $this->AmountSemuaAnggota(TransaksiS::class, $formattedMonth, $userIdsWithTransactions) ?: '-';
-        $totalTagihanSemuaAnggota = $this->AmountSemuaAnggota(TransaksiT::class, $formattedMonth, $userIdsWithTransactions) ?: '-';
+        // Total Row
+        $totalRow = ['', '', '', ''];
+        foreach ($kategoriList as $k) {
+            $totalRow[] = $colTotals[$k->id] ?: '-';
+        }
+        $totalRow[] = $grandTotalSimpanan ?: '-';
+        $totalRow[] = $grandTotalTagihan ?: '-';
 
-        $dataRowSemuaAnggota = [
-            'No' => '',
-            'No Anggota' => '',
-            'Nama' => '',
-            'Alamat' => '',
-            'Iuran Pokok' => $totalKategoriSimpananPokok,
-            'Iuran Wajib' => $totalKategoriSimpananWajib,
-            'Jumlah Simpanan' => $totalSimpananSemuaAnggota,
-            'Pinjaman' => $totalKategoriPinjaman,
-            'Bagi Hasil' => $totalKategoriBagihasil,
-            'Jumlah Tagihan' => $totalTagihanSemuaAnggota,
-        ];
-
-        $data[] = $dataRowSemuaAnggota;
+        $data[] = $totalRow;
 
         $filename = 'Laporan Koprasi Bulan ' . $formattedMonth2 . '.xlsx';
 
-        return Excel::download(new FilteredDataExport($data, $formattedMonth), $filename);
-    }
-
-
-    protected function getTransactionAmountFiltered($userId, $kategori, $model, $formattedMonth)
-    {
-        $kategoriId = Kategori::where('nama', $kategori)->value('id');
-
-        return $model::where('id_user', $userId)
-            ->where('id_kategori', $kategoriId)
-            ->whereMonth('tanggal', $formattedMonth)
-            ->sum('jumlah');
-    }
-
-    protected function getTotalTransactionAmountFiltered($userId, $model, $formattedMonth)
-    {
-        if ($model == TransaksiS::class) {
-            $jumlahwajib = $model::where('id_user', $userId)
-                ->whereMonth('tanggal', $formattedMonth)
-                ->sum('jumlah');
-            $jumlahpokok = User::where('id', $userId)
-                ->sum('iuran_pokok');
-            $totalsimpanan = $jumlahwajib += $jumlahpokok;
-        } else {
-            $totalsimpanan = $model::where('id_user', $userId)
-                ->whereMonth('tanggal', $formattedMonth)
-                ->sum('jumlah');
-        }
-        return $totalsimpanan;
-    }
-
-    protected function AmountSemuaAnggota($model, $formattedMonth, $userIdsWithTransactions)
-    {
-        $total = 0;
-        $users = User::whereIn('id', $userIdsWithTransactions)->get();
-
-        foreach ($users as $user) {
-            $total += $this->getTotalTransactionAmountFiltered($user->id, $model, $formattedMonth);
-        }
-
-        return $total;
-    }
-
-    protected function TotalByKategoriFiltered($kategori, $model, $formattedMonth)
-    {
-        $total2 = 0;
-        foreach (User::all() as $user) {
-
-            $total2 += $this->getTransactionAmountFiltered($user->id,  $kategori, $model, $formattedMonth);
-        }
-
-        return $total2;
+        return Excel::download(new FilteredDataExport($data, $formattedMonth, $headings), $filename);
     }
 }

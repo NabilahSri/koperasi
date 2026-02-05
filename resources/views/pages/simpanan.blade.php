@@ -380,17 +380,7 @@
             // Menggunakan endpoint yang sama untuk mendapatkan data user
             $.get("/simpanan/getJumlah/" + userId + "/0", function(data, status) {
                 if (data) {
-                    // Simpanan Pokok (ID 1)
-                    let inputPokok = document.querySelector('input[name="transaksi[1][jumlah]"]');
-                    if (inputPokok && data.iuran_pokok) {
-                        inputPokok.value = formatRupiah(data.iuran_pokok.toString(), 'Rp ');
-                    }
-
-                    // Simpanan Wajib (ID 2)
-                    let inputWajib = document.querySelector('input[name="transaksi[2][jumlah]"]');
-                    if (inputWajib && data.iuran_wajib) {
-                        inputWajib.value = formatRupiah(data.iuran_wajib.toString(), 'Rp ');
-                    }
+                    // Auto-fill logic removed as iuran columns are deleted from users table
 
                     // Recalculate total
                     calculateTotal();
@@ -429,7 +419,7 @@
                 if (!min && !max) return true;
                 var api = new $.fn.dataTable.Api(settings);
                 var node = api.row(dataIndex).node();
-                var dateStr = $(node).find('td').eq(5).attr('data-date');
+                var dateStr = $(node).find('td').eq(6).attr('data-date');
                 if (!dateStr) return true;
                 var date = new Date(dateStr);
                 var minDate = min ? new Date(min) : null;
@@ -445,10 +435,9 @@
             });
 
             $('#filter-reset').on('click', function() {
-                $('#filter-name').val('');
+                $('#filter-name').val('').trigger('change');
                 $('#filter-start').val('');
                 $('#filter-end').val('');
-                dt6.column(1).search('').draw();
                 dt6.draw();
             });
 

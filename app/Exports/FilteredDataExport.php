@@ -16,10 +16,13 @@ class FilteredDataExport implements FromCollection, WithHeadings, ShouldAutoSize
 
     protected $data;
     protected $month;
+    protected $headings;
 
-    public function __construct(array $data, $month)
+    public function __construct(array $data, $month, array $headings)
     {
         $this->data = $data;
+        $this->month = $month;
+        $this->headings = $headings;
     }
 
     public function collection()
@@ -39,32 +42,23 @@ class FilteredDataExport implements FromCollection, WithHeadings, ShouldAutoSize
 
     public function headings(): array
     {
-        // Sesuaikan dengan judul kolom yang diinginkan
-        $headings = [
-            'No',
-            'No Anggota',
-            'Nama',
-            'Alamat',
-            'Iuran Wajib',
-            'Iuran Pokok',
-            'Jumlah Simpanan',
-            'Pinjaman',
-            'Bagi Hasil',
-            'Jumlah Tagihan',
-        ];
-
-        return $headings;
+        return $this->headings;
     }
     
     public function registerEvents(): array
     {
         return [
             AfterSheet::class => function(AfterSheet $event) {
-                $cellRange = 'A1:J' . (count($this->data) + 1); // Adjusted range based on the number of rows in the data
+                $lastColumnIndex = count($this->headings);
+                $lastColumn = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($lastColumnIndex);
+                $cellRange = 'A1:' . $lastColumn . (count($this->data) + 1);
+
                 $event->sheet->getDelegate()->getStyle($cellRange)->getFont()->setSize(12);
     
                 // Loop through each cell in the range to apply borders and formatting
-                foreach (range('A', 'J') as $column) {
+                for ($col = 1; $col <= $lastColumnIndex; $col++) {
+                    $column = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($col);
+
                     for ($row = 1; $row <= count($this->data) + 1; $row++) {
                         // Apply a different style to header cells (row 1)
                         $headerStyle = ($row == 1) ? [
@@ -73,20 +67,19 @@ class FilteredDataExport implements FromCollection, WithHeadings, ShouldAutoSize
                             'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER],
                         ] : [];
     
-                        // Format numerical values as Indonesian Rupiah for specific columns
-                        $currencyColumns = ['E', 'F', 'G', 'H', 'I', 'J'];
-                        $format = (in_array($column, $currencyColumns) && $row > 1) ? '_-"Rp"* #,##0_-;[Red]-"Rp"* #,##0_-' : null;
+                        // Format numerical values as Indonesian Rupiah for specific columns (Columns starting from E - index 5)
+                        // Assuming columns A-D are fixed (No, No Anggota, Nama, Alamat)
+                        $format = ($col >= 5 && $row > 1) ? '_-"Rp"* #,##0_-;[Red]-"Rp"* #,##0_-' : null;
     
                         $event->sheet->getStyle($column . $row)->applyFromArray([
                             'borders' => [
                                 'outline' => [
-                                    'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN, // Adjusted thickness
-                                    'color' => ['rgb' => '575757'], // Adjusted color
+                                    'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                                    'color' => ['rgb' => '575757'],
                                 ],
                             ],
-                        ] + $headerStyle); // Merge the styles
+                        ] + $headerStyle);
     
-                        // Apply custom number format if applicable
                         if ($format) {
                             $event->sheet->getStyle($column . $row)->getNumberFormat()->setFormatCode($format);
                         }

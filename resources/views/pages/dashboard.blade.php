@@ -1,5 +1,5 @@
 @extends('component.template')
-@if (auth()->user()->role == "admin")
+@if (auth()->user()->role == 'admin')
     @section('content')
         <main class="main-wrapper">
             <div class="container-fluid">
@@ -13,7 +13,7 @@
                             <h3 id="clock" class="text-end"></h3>
                             <p id="date"></p>
                         </div>
-                        
+
                     </div>
 
                     <div class="row">
@@ -21,7 +21,8 @@
                             <div class="card border-0 card-graph">
                                 <div class="card-body">
                                     <div class="card-img d-flex align-items-center gap-3">
-                                        <span class="d-inline-block bg-primary text-white"><i class="bi bi-people"></i></span>
+                                        <span class="d-inline-block bg-primary text-white"><i
+                                                class="bi bi-people"></i></span>
                                         <h6 class="mb-0">Total Anggota</h6>
                                     </div>
                                     <div class="card-content d-flex align-items-center justify-content-between gap-5">
@@ -61,7 +62,8 @@
                             <div class="card border-0 card-graph">
                                 <div class="card-body">
                                     <div class="card-img d-flex align-items-center gap-3">
-                                        <span class="d-inline-block bg-secondary text-white"><i class="bi bi-box-seam"></i></span>
+                                        <span class="d-inline-block bg-secondary text-white"><i
+                                                class="bi bi-box-seam"></i></span>
                                         <h6 class="mb-0 mt-2">Total Tagihan</h6>
                                     </div>
                                     <div class="card-content d-flex align-items-center justify-content-between gap-5">
@@ -82,7 +84,8 @@
                             <div class="card border-0 card-graph">
                                 <div class="card-body">
                                     <div class="card-img d-flex align-items-center gap-3">
-                                        <span class="d-inline-block bg-danger text-white"><i class="bi bi-box-seam"></i></span>
+                                        <span class="d-inline-block bg-danger text-white"><i
+                                                class="bi bi-box-seam"></i></span>
                                         <h6 class="mb-0 mt-2">Total Simpanan</h6>
                                     </div>
                                     <div class="card-content d-flex align-items-center justify-content-between gap-5">
@@ -104,7 +107,7 @@
                                 <div class="card-header bg-transparent border-0 p-5 pb-0">
                                     <h4 class="mb-0">Simpanan Masuk Hari Ini</h4>
                                 </div>
-    
+
                                 <div class="card-body pt-2">
                                     <div class="table-responsive">
                                         <table id="table-6" class="display text-center">
@@ -119,7 +122,7 @@
                                             <tbody>
                                                 @foreach ($simpanan_masuk as $smasuks)
                                                     <tr>
-                                                        <td> 
+                                                        <td>
                                                             <div class="d-flex gap-2 flex-wrap">
                                                                 <div class="profilepicture flex-shrink-0 d-none d-xl-block">
                                                                     <img src="assets/img/clients/1.jpg" alt="img">
@@ -151,22 +154,22 @@
                                                                 </div>
                                                             </div>
                                                         </td>
-                                                    </tr>  
+                                                    </tr>
                                                 @endforeach
-                                                
+
                                             </tbody>
                                         </table>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div class="col-xxl-6 col-md-12">
                             <div class="card border-0 shadow-sm">
                                 <div class="card-header bg-transparent border-0 p-5 pb-0">
                                     <h4 class="mb-0"></h4>
                                 </div>
-    
+
                                 <div class="card-body pt-2">
                                     <div class="table-responsive">
                                         <table id="table-5" class="display text-center">
@@ -180,7 +183,7 @@
                                             </thead>
                                             <tbody>
                                                 <tr>
-                                                    <td> 
+                                                    <td>
                                                         <div class="d-flex gap-2 flex-wrap">
                                                             <div class="profilepicture flex-shrink-0 d-none d-xl-block">
                                                                 <img src="assets/img/clients/1.jpg" alt="img">
@@ -213,9 +216,9 @@
                                                         </div>
                                                     </td>
                                                 </tr>
-                                                
+
                                                 <tr>
-                                                    <td> 
+                                                    <td>
                                                         <div class="d-flex gap-2 flex-wrap">
                                                             <div class="profilepicture flex-shrink-0 d-none d-xl-block">
                                                                 <img src="assets/img/clients/2.jpg" alt="img">
@@ -248,9 +251,9 @@
                                                         </div>
                                                     </td>
                                                 </tr>
-                                                
+
                                                 <tr>
-                                                    <td> 
+                                                    <td>
                                                         <div class="d-flex gap-2 flex-wrap">
                                                             <div class="profilepicture flex-shrink-0 d-none d-xl-block">
                                                                 <img src="assets/img/clients/3.jpg" alt="img">
@@ -283,9 +286,9 @@
                                                         </div>
                                                     </td>
                                                 </tr>
-                                                
+
                                                 <tr>
-                                                    <td> 
+                                                    <td>
                                                         <div class="d-flex gap-2 flex-wrap">
                                                             <div class="profilepicture flex-shrink-0 d-none d-xl-block">
                                                                 <img src="assets/img/clients/4.jpg" alt="img">
@@ -318,9 +321,9 @@
                                                         </div>
                                                     </td>
                                                 </tr>
-                                                
+
                                                 <tr>
-                                                    <td> 
+                                                    <td>
                                                         <div class="d-flex gap-2 flex-wrap">
                                                             <div class="profilepicture flex-shrink-0 d-none d-xl-block">
                                                                 <img src="assets/img/clients/5.jpg" alt="img">
@@ -365,12 +368,12 @@
                         <div class="col-xxl-8">
                             <div class="card border-0 card-graph p-5">
                                 <div class="card-header card-graph--header  bg-transparent border-0 p-0 mb-5 d-flex align-items-center justify-content-between gap-3">
-                                    
+
                                     <div>
                                         <h4 class="mb-0">Weekly Target</h4>
                                         <p>Lorem ipsum dolor sit amet</p>
                                     </div>
-                                    <div class="ms-auto d-flex align-items-center gap-3">    
+                                    <div class="ms-auto d-flex align-items-center gap-3">
                                         <div class="dropdown">
                                             <a href="#" data-bs-toggle="dropdown" class="fs-24 text-gray">
                                                 <i class="bi bi-three-dots-vertical"></i>
@@ -394,7 +397,7 @@
                                                 <p class="mb-0 text-gray"><span class="fw-bold text-success">+15%</span> than last month</p>
                                             </div>
                                         </div>
-    
+
                                         <div class="d-flex align-items-center gap-5">
                                             <div>
                                                 <p class="mb-0 d-flex align-items-center"><span class="indicator bg-primary"></span> Completed</p>
@@ -430,7 +433,7 @@
                             <div class="card border-0 p-5">
                                 <div class="card-header card-graph--header  bg-transparent border-0 p-0 mb-4 d-flex align-items-center justify-content-between gap-3">
                                     <h4 class="mb-0">Progress</h4>
-                                    <div class="ms-auto d-flex align-items-center gap-3">        
+                                    <div class="ms-auto d-flex align-items-center gap-3">
                                         <div class="dropdown">
                                             <a href="#" data-bs-toggle="dropdown" class="fs-24 text-gray">
                                                 <i class="bi bi-three-dots-vertical"></i>
@@ -464,35 +467,34 @@
             </div>
         </main>
     @endsection
-    
 @else
     @section('content')
-    <main class="main-wrapper">
-        <div class="container-fluid">
-            <div class="inner-contents">
-                <div class="page-header d-flex align-items-center justify-content-between mr-bottom-30">
-                    <div class="left-part">
-                        <h2 class="text-dark">Dashboard</h2>
-                        {{-- <p class="text-gray mb-0">Lorem ipsum dolor sit amet </p> --}}
-                    </div>
-                    <div id="realtime-clock">
-                        <h3 id="clock" class="text-end"></h3>
-                        <p id="date"></p>
-                    </div>
-                    
-                </div>
+        <main class="main-wrapper">
+            <div class="container-fluid">
+                <div class="inner-contents">
+                    <div class="page-header d-flex align-items-center justify-content-between mr-bottom-30">
+                        <div class="left-part">
+                            <h2 class="text-dark">Dashboard</h2>
+                            {{-- <p class="text-gray mb-0">Lorem ipsum dolor sit amet </p> --}}
+                        </div>
+                        <div id="realtime-clock">
+                            <h3 id="clock" class="text-end"></h3>
+                            <p id="date"></p>
+                        </div>
 
-                {{-- <div class="row">
+                    </div>
+
+                    {{-- <div class="row">
                     <div class="col-md-6">
                         <div class="card border-0">
                             <div class="card-body py-0 d-flex align-items-center gap-2 gap-lg-5 flex-wrap">
-                                <div> 
+                                <div>
                                     <div id="chart-34">
                                     </div>
-                                </div> 
-                                <div> 
+                                </div>
+                                <div>
                                     <h2 class="fs-38">{{ number_format($sisa_pinjaman) }}</h2>
-                                    <h5 class="fw-semibold text-gray mb-0">Sisa Pinjaman</h5> 
+                                    <h5 class="fw-semibold text-gray mb-0">Sisa Pinjaman</h5>
                                     <p class="text-gray mb-0">yang belum lunas </p>
                                 </div>
                             </div>
@@ -502,12 +504,12 @@
                     <div class="col-md-6">
                         <div class="card border-0">
                             <div class="card-body py-0 d-flex align-items-center gap-2 gap-lg-5 flex-wrap">
-                                <div> 
-                                    <div id="chart-35"></div> 
-                                </div> 
-                                <div> 
+                                <div>
+                                    <div id="chart-35"></div>
+                                </div>
+                                <div>
                                     <h2 class="fs-38">{{ number_format($sisa_bagihasil) }}</h2>
-                                    <h5 class="fw-semibold text-gray mb-0">Sisa Bagi Hasil</h5> 
+                                    <h5 class="fw-semibold text-gray mb-0">Sisa Bagi Hasil</h5>
                                     <p class="text-gray mb-0">yang belum lunas </p>
                                 </div>
                             </div>
@@ -515,82 +517,93 @@
                     </div>
                 </div> --}}
 
-                <div class="row">
-                    <div class="col-xxl-3 col-md-6">
-                        <div class="card border-0 card--stat bg-primary text-white">
-                            <div class="card-body">
-                                <div class="card-img d-flex align-items-center gap-3">
-                                    <span class="d-inline-block bg-secondary text-white"><i class="bi bi-bookmarks-fill"></i></span>
-                                    <h5 class="mb-0 text-white fw-semibold">Jumlah Pinjaman</h5>
-                                </div>
-                                <div class="card-content mt-4 mb-4">
-                                    <h5 class="fs-38 mb-0 text-white">{{ number_format($pinjaman->nominal_pinjaman ?? 0) }}</h5>
-                                </div>
-                                <div class="d-flex align-items-center gap-2">
-                                    <span class="icon"><i class="bi bi-arrow-up-circle-fill"></i></span>
-                                    <p class="mb-0"><span class="fw-bold">{{ number_format($sisa_pinjaman ?? 0) }}</span> belum dibayar</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-xxl-3 col-md-6">
-                        <div class="card border-0 card--stat bg-info text-white">
-                            <div class="card-body">
-                                <div class="card-img d-flex align-items-center gap-3">
-                                    <span class="d-inline-block bg-primary text-white"><i class="bi bi-bookmarks-fill"></i></span>
-                                    <h5 class="mb-0 text-white fw-semibold">Jumlah Bagi Hasil</h5>
-                                </div>
-                                <div class="card-content mt-4 mb-4">
-                                    <h3 class="fs-38 mb-0 text-white">{{ number_format($pinjaman->nominal_bagihasil ?? 0) }}</h3>
-                                </div>
-                                <div class="d-flex align-items-center gap-2">
-                                    <span class="icon"><i class="bi bi-arrow-up-circle-fill"></i></span>
-                                    <p class="mb-0"><span class="fw-bold">{{ number_format($sisa_bagihasil ?? 0) }}</span> belum dibayar</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-xxl-3 col-md-6">
-                        <div class="card border-0 card--stat bg-primary text-white">
-                            <div class="card-body">
-                                <div class="card-img d-flex align-items-center gap-3">
-                                    <span class="d-inline-block bg-secondary text-white"><i class="bi bi-bookmarks-fill"></i></span>
-                                    <h5 class="mb-0 text-white fw-semibold">Iuran Pokok</h5>
-                                </div>
-                                <div class="card-content mt-4 mb-4">
-                                    <h3 class="fs-38 mb-0 text-white">{{ number_format($jumlah_simpanan->iuran_pokok) }}</h3>
-                                </div>
-                                <div class="d-flex align-items-center gap-2">
-                                    <span class="icon"><i class="bi bi-arrow-up-circle-fill"></i></span>
-                                    <p class="mb-0"><span class="fw-bold">0</span> belum dibayar</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-xxl-3 col-md-6">
-                        <div class="card border-0 card--stat bg-info text-white">
-                            <div class="card-body">
-                                <div class="card-img d-flex align-items-center gap-3">
-                                    <span class="d-inline-block bg-primary text-white"><i class="bi bi-bookmarks-fill"></i></span>
-                                    <h5 class="mb-0 text-white fw-semibold">Iuran Wajib</h5>
-                                </div>
-                                <div class="card-content mt-4 mb-4">
-                                    <h3 class="fs-38 mb-0 text-white">{{ number_format($jumlah_simpanan->iuran_wajib) }}</h3>
-                                </div>
-                                <div class="d-flex align-items-center gap-2">
-                                    <span class="icon"><i class="bi bi-arrow-up-circle-fill"></i></span>
-                                    <p class="mb-0"><span class="fw-bold">{{ number_format($total_iuran_wajib) }}</span> sudah masuk</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
                     <div class="row">
-                        
+                        <div class="col-xxl-3 col-md-6">
+                            <div class="card border-0 card--stat bg-primary text-white">
+                                <div class="card-body">
+                                    <div class="card-img d-flex align-items-center gap-3">
+                                        <span class="d-inline-block bg-secondary text-white"><i
+                                                class="bi bi-bookmarks-fill"></i></span>
+                                        <h5 class="mb-0 text-white fw-semibold">Jumlah Pinjaman</h5>
+                                    </div>
+                                    <div class="card-content mt-4 mb-4">
+                                        <h5 class="fs-38 mb-0 text-white">
+                                            {{ number_format($pinjaman->nominal_pinjaman ?? 0) }}</h5>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="icon"><i class="bi bi-arrow-up-circle-fill"></i></span>
+                                        <p class="mb-0"><span
+                                                class="fw-bold">{{ number_format($sisa_pinjaman ?? 0) }}</span> belum
+                                            dibayar</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xxl-3 col-md-6">
+                            <div class="card border-0 card--stat bg-info text-white">
+                                <div class="card-body">
+                                    <div class="card-img d-flex align-items-center gap-3">
+                                        <span class="d-inline-block bg-primary text-white"><i
+                                                class="bi bi-bookmarks-fill"></i></span>
+                                        <h5 class="mb-0 text-white fw-semibold">Jumlah Bagi Hasil</h5>
+                                    </div>
+                                    <div class="card-content mt-4 mb-4">
+                                        <h3 class="fs-38 mb-0 text-white">
+                                            {{ number_format($pinjaman->nominal_bagihasil ?? 0) }}</h3>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="icon"><i class="bi bi-arrow-up-circle-fill"></i></span>
+                                        <p class="mb-0"><span
+                                                class="fw-bold">{{ number_format($sisa_bagihasil ?? 0) }}</span> belum
+                                            dibayar</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xxl-3 col-md-6">
+                            <div class="card border-0 card--stat bg-primary text-white">
+                                <div class="card-body">
+                                    <div class="card-img d-flex align-items-center gap-3">
+                                        <span class="d-inline-block bg-secondary text-white"><i
+                                                class="bi bi-bookmarks-fill"></i></span>
+                                        <h5 class="mb-0 text-white fw-semibold">Iuran Pokok</h5>
+                                    </div>
+                                    <div class="card-content d-flex align-items-center justify-content-between gap-5">
+                                        <h3 class="fs-38 mb-0 text-white">{{ number_format($total_iuran_pokok) }}</h3>
+                                        <div id="chart-3"></div>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="icon"><i class="bi bi-arrow-up-circle-fill"></i></span>
+                                        <p class="mb-0"><span class="fw-bold">0</span> belum dibayar</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xxl-3 col-md-6">
+                            <div class="card border-0 card--stat bg-info text-white">
+                                <div class="card-body">
+                                    <div class="card-img d-flex align-items-center gap-3">
+                                        <span class="d-inline-block bg-primary text-white"><i
+                                                class="bi bi-bookmarks-fill"></i></span>
+                                        <h5 class="mb-0 text-white fw-semibold">Iuran Wajib</h5>
+                                    </div>
+                                    <div class="card-content mt-4 mb-4">
+                                        <h3 class="fs-38 mb-0 text-white">{{ number_format($total_iuran_wajib) }}</h3>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="icon"><i class="bi bi-arrow-up-circle-fill"></i></span>
+                                        <p class="mb-0">Total Simpanan Wajib</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </main>
+        </main>
     @endsection
 @endif
 @section('script')
@@ -671,24 +684,27 @@
     </script> --}}
     <script>
         function updateClock() {
-        const now = new Date();
-        const hours = now.getHours().toString().padStart(2, '0');
-        const minutes = now.getMinutes().toString().padStart(2, '0');
-        const seconds = now.getSeconds().toString().padStart(2, '0');
-        const timeString = `${hours}:${minutes}:${seconds}`;
-        document.getElementById('clock').textContent = timeString;
-    
-        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-        const dateString = now.toLocaleDateString('id-ID', options);
-        document.getElementById('date').textContent = dateString;
+            const now = new Date();
+            const hours = now.getHours().toString().padStart(2, '0');
+            const minutes = now.getMinutes().toString().padStart(2, '0');
+            const seconds = now.getSeconds().toString().padStart(2, '0');
+            const timeString = `${hours}:${minutes}:${seconds}`;
+            document.getElementById('clock').textContent = timeString;
+
+            const options = {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            };
+            const dateString = now.toLocaleDateString('id-ID', options);
+            document.getElementById('date').textContent = dateString;
         }
-    
+
         // Memperbarui waktu awal saat halaman dimuat
         updateClock();
-    
+
         // Memperbarui waktu setiap detik
         setInterval(updateClock, 1000);
     </script>
 @endsection
-
-

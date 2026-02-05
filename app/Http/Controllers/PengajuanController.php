@@ -37,14 +37,16 @@ class PengajuanController extends Controller
             'nominal_pinjaman' => 'required',
             'nominal_bagihasil' => 'required',
             'tanggal_pengajuan' => 'required',
-            'keterangan' => 'required',
         ]);
+        
+        $nominal_pinjaman = preg_replace('/[^0-9]/', '', $req->nominal_pinjaman);
+        $nominal_bagihasil = preg_replace('/[^0-9]/', '', $req->nominal_bagihasil);
+
         Pengajuan::where('id',$req->id)->update([
             'id_user' => $req->id_user,
-            'nominal_pinjaman' => $req->nominal_pinjaman,
-            'nominal_bagihasil' => $req->nominal_bagihasil,
+            'nominal_pinjaman' => $nominal_pinjaman,
+            'nominal_bagihasil' => $nominal_bagihasil,
             'tanggal_pengajuan' => $req->tanggal_pengajuan,
-            'keterangan' => $req->keterangan,
         ]);
         return redirect('/tagihan/pengajuan');
     }

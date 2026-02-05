@@ -56,6 +56,16 @@
                                             <input type="text" class="form-control" id="add2"
                                                 value="{{ $item->nohp }}" readonly>
                                         </div>
+                                        <div class="form-group col-md-6">
+                                            <label class="form-label">Tenggat Iuran Wajib (Tanggal):</label>
+                                            <input type="text" class="form-control"
+                                                value="{{ $item->tenggat_iuran_wajib }}" readonly>
+                                        </div>
+                                        <div class="form-group col-md-6">
+                                            <label class="form-label">Tenggat Bayar Tagihan (Tanggal):</label>
+                                            <input type="text" class="form-control"
+                                                value="{{ $item->tenggat_bayar_tagihan }}" readonly>
+                                        </div>
                                         <hr>
                                     </div>
                                 </form>
@@ -95,6 +105,22 @@
                                                             <label class="form-label" for="add2">No Telepon:</label>
                                                             <input type="text" class="form-control" id="add2"
                                                                 name="nohp" value="{{ $item->nohp }}">
+                                                        </div>
+                                                        <div class="form-group col-md-6">
+                                                            <label class="form-label">Tenggat Iuran Wajib
+                                                                (Tanggal):</label>
+                                                            <input type="number" class="form-control"
+                                                                name="tenggat_iuran_wajib"
+                                                                value="{{ $item->tenggat_iuran_wajib }}" min="1"
+                                                                max="31">
+                                                        </div>
+                                                        <div class="form-group col-md-6">
+                                                            <label class="form-label">Tenggat Bayar Tagihan
+                                                                (Tanggal):</label>
+                                                            <input type="number" class="form-control"
+                                                                name="tenggat_bayar_tagihan"
+                                                                value="{{ $item->tenggat_bayar_tagihan }}" min="1"
+                                                                max="31">
                                                         </div>
                                                         <div class="form-group col-md-6">
                                                             <label class="form-label" for="add2">Logo

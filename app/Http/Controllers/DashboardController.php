@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Kategori;
 use App\Models\Pengajuan;
 use App\Models\TransaksiS;
 use App\Models\TransaksiT;
@@ -30,11 +31,14 @@ class DashboardController extends Controller
             $data['sisa_bagihasil'] = 0;
         }
 
-        $data['jumlah_simpanan'] = User::where('id', auth()->user()->id)->first();
-        $data['total_iuran_wajib'] = TransaksiS::where('id_kategori', 2)->where('id_user',  auth()->user()->id)->sum('jumlah');
+        $kategoriPokok = Kategori::where('nama', 'Iuran Pokok')->first();
+        $kategoriWajib = Kategori::where('nama', 'Iuran Wajib')->first();
 
-        $data['total_admin'] = User::where('role', 'admin')->sum('role');
-        $data['total_anggota'] = User::where('role', 'anggota')->sum('role');
+        $data['total_iuran_pokok'] = $kategoriPokok ? TransaksiS::where('id_kategori', $kategoriPokok->id)->where('id_user',  auth()->user()->id)->sum('jumlah') : 0;
+        $data['total_iuran_wajib'] = $kategoriWajib ? TransaksiS::where('id_kategori', $kategoriWajib->id)->where('id_user',  auth()->user()->id)->sum('jumlah') : 0;
+
+        $data['total_admin'] = User::where('role', 'admin')->count();
+        $data['total_anggota'] = User::where('role', 'anggota')->count();
 
         $data['total_semua_simpanan'] = TransaksiS::sum('jumlah');
         $data['total_semua_tagihan'] = Pengajuan::sum('nominal_pinjaman') + Pengajuan::sum('nominal_bagihasil');

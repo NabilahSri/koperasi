@@ -55,16 +55,6 @@
                                         <input type="text" class="form-control" id="add2"
                                             value="{{ $user->nohp }}" readonly>
                                     </div>
-                                    <div class="form-group col-md-6">
-                                        <label class="form-label" for="cname">Iuran Wajib:</label>
-                                        <input type="text" class="form-control" id="cname"
-                                            value="{{ $user->iuran_wajib }}" readonly>
-                                    </div>
-                                    <div class="form-group col-md-6">
-                                        <label class="form-label" for="uname">Iuran Pokok:</label>
-                                        <input type="text" class="form-control" id="uname"
-                                            value="{{ $user->iuran_pokok }}" readonly>
-                                    </div>
                                     <hr>
                             </form>
                         </div>
