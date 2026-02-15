@@ -388,6 +388,14 @@
             });
         }
 
+        function getLocalYYYYMMDD() {
+            var d = new Date();
+            var y = d.getFullYear();
+            var m = String(d.getMonth() + 1).padStart(2, '0');
+            var day = String(d.getDate()).padStart(2, '0');
+            return y + '-' + m + '-' + day;
+        }
+
         $(document).ready(function() {
             // Calculate total on input change
             $(document).on('keyup input', '.amount-input', function() {
@@ -421,14 +429,15 @@
                 var node = api.row(dataIndex).node();
                 var dateStr = $(node).find('td').eq(6).attr('data-date');
                 if (!dateStr) return true;
-                var date = new Date(dateStr);
-                var minDate = min ? new Date(min) : null;
-                var maxDate = max ? new Date(max) : null;
-                if ((minDate === null || date >= minDate) && (maxDate === null || date <= maxDate)) {
-                    return true;
-                }
-                return false;
+                if (min && dateStr < min) return false;
+                if (max && dateStr > max) return false;
+                return true;
             });
+
+            var todayStr = getLocalYYYYMMDD();
+            $('#filter-start').val(todayStr);
+            $('#filter-end').val(todayStr);
+            dt6.draw();
 
             $('#filter-start, #filter-end').on('change', function() {
                 dt6.draw();
@@ -436,8 +445,9 @@
 
             $('#filter-reset').on('click', function() {
                 $('#filter-name').val('').trigger('change');
-                $('#filter-start').val('');
-                $('#filter-end').val('');
+                var t = getLocalYYYYMMDD();
+                $('#filter-start').val(t);
+                $('#filter-end').val(t);
                 dt6.draw();
             });
 
