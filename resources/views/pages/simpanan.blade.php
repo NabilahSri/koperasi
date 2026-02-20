@@ -68,9 +68,15 @@
                                                     data-bs-toggle="modal"
                                                     data-bs-target="#deleteModal{{ $item->id }}"><i
                                                         class="bi bi-trash fs-18"></i></a>
-                                                <a href="#" class="btn btn-icon btn-sm btn-warning"
-                                                    data-bs-toggle="modal"
-                                                    data-bs-target="#editModal{{ $item->id }}"><i
+                                                <a href="#" class="btn btn-icon btn-sm btn-warning btn-edit-simpanan"
+                                                    data-bs-toggle="modal" data-bs-target="#editModal"
+                                                    data-id="{{ $item->id }}" data-id-user="{{ $item->id_user }}"
+                                                    data-nama-penyetor="{{ $item->nama_penyetor }}"
+                                                    data-tanggal="{{ $item->tanggal }}"
+                                                    data-keterangan="{{ $item->keterangan }}"
+                                                    data-kategori-nama="{{ $item->kategori->nama }}"
+                                                    data-id-kategori="{{ $item->id_kategori }}"
+                                                    data-jumlah="{{ $item->jumlah }}"><i
                                                         class="bi bi-pencil-square fs-18"></i></a>
                                             </td>
                                             {{-- modalHapus --}}
@@ -97,130 +103,100 @@
                                                     </div>
                                                 </div>
                                             </div>
-                                            {{-- modalEdit --}}
-                                            <div class="modal modal-lg fade" id="editModal{{ $item->id }}"
-                                                tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-                                                <div class="modal-dialog">
-                                                    <div class="modal-content">
-                                                        <div class="modal-header bg-primary text-white">
-                                                            <h5 class="modal-title text-white">Edit Data Simpanan</h5>
-                                                            <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                                                aria-label="Close"></button>
-                                                        </div>
-                                                        <form method="POST" action="/simpanan/edit/{{ $item->id }}"
-                                                            class="formEditSimpanan">
-                                                            @csrf
-                                                            <div class="modal-body p-4">
-                                                                <div class="row g-4">
-                                                                    <div class="col-md-5 border-end">
-                                                                        <h6
-                                                                            class="text-primary fw-bold mb-3 d-flex align-items-center">
-                                                                            <i class="bi bi-person-vcard fs-5 me-2"></i>
-                                                                            Data Anggota
-                                                                        </h6>
-                                                                        <div class="mb-3">
-                                                                            <label
-                                                                                class="form-label text-muted small fw-semibold">Pilih
-                                                                                Anggota</label>
-                                                                            <select name="id_user" class="form-select"
-                                                                                required>
-                                                                                <option value="{{ $item->id_user }}"
-                                                                                    selected>{{ $item->user->name }}
-                                                                                </option>
-                                                                                @foreach ($user as $data)
-                                                                                    <option value="{{ $data->id }}">
-                                                                                        {{ $data->name }}</option>
-                                                                                @endforeach
-                                                                            </select>
-                                                                        </div>
-                                                                        <div class="mb-3">
-                                                                            <label
-                                                                                class="form-label text-muted small fw-semibold">Nama
-                                                                                Penyetor</label>
-                                                                            <input type="text"
-                                                                                class="form-control bg-light"
-                                                                                name="nama_penyetor" required
-                                                                                placeholder="Nama penyetor"
-                                                                                value="{{ $item->nama_penyetor }}">
-                                                                        </div>
-                                                                        <div class="mb-3">
-                                                                            <label
-                                                                                class="form-label text-muted small fw-semibold">Tanggal
-                                                                                Transaksi</label>
-                                                                            <input type="date"
-                                                                                class="form-control bg-light"
-                                                                                name="tanggal" required
-                                                                                value="{{ $item->tanggal }}">
-                                                                        </div>
-                                                                        <div class="mb-3">
-                                                                            <label
-                                                                                class="form-label text-muted small fw-semibold">Catatan</label>
-                                                                            <textarea class="form-control bg-light" name="keterangan" rows="3" placeholder="Tulis keterangan...">{{ $item->keterangan }}</textarea>
-                                                                        </div>
-                                                                    </div>
-                                                                    <div class="col-md-7">
-                                                                        <h6
-                                                                            class="text-primary fw-bold mb-3 d-flex align-items-center">
-                                                                            <i class="bi bi-cash-stack fs-5 me-2"></i>
-                                                                            Rincian Simpanan
-                                                                        </h6>
-                                                                        <div class="bg-primary-subtle p-3 rounded mb-3">
-                                                                            <small class="text-primary fw-semibold"><i
-                                                                                    class="bi bi-info-circle-fill me-1"></i>
-                                                                                Instruksi:</small>
-                                                                            <p class="mb-0 small text-dark">Perbarui
-                                                                                nominal sesuai kategori simpanan yang ingin
-                                                                                diubah.</p>
-                                                                        </div>
-                                                                        <div class="mb-3">
-                                                                            <label
-                                                                                class="form-label text-muted small fw-semibold">Kategori</label>
-                                                                            <input type="text"
-                                                                                class="form-control bg-light"
-                                                                                value="{{ $item->kategori->nama }}"
-                                                                                readonly>
-                                                                            <input type="hidden" name="id_kategori"
-                                                                                value="{{ $item->id_kategori }}">
-                                                                        </div>
-                                                                        <div
-                                                                            class="card border shadow-none hover-shadow-sm transition-all">
-                                                                            <div
-                                                                                class="card-body py-2 px-3 d-flex align-items-center justify-content-between">
-                                                                                <label
-                                                                                    class="form-label mb-0 fw-medium text-dark flex-grow-1">
-                                                                                    Jumlah Bayar
-                                                                                </label>
-                                                                                <div class="input-group"
-                                                                                    style="width: 200px;">
-                                                                                    <input type="text"
-                                                                                        class="form-control fw-bold text-end rupiah-input"
-                                                                                        name="jumlah" placeholder="Rp 0"
-                                                                                        value="{{ $item->jumlah }}">
-                                                                                </div>
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                            <div class="modal-footer bg-light px-4 py-3">
-                                                                <button type="button"
-                                                                    class="btn btn-outline-secondary px-4 fw-medium"
-                                                                    data-bs-dismiss="modal">
-                                                                    Batal
-                                                                </button>
-                                                                <button type="submit"
-                                                                    class="btn btn-primary px-4 fw-bold shadow-sm">
-                                                                    Simpan Perubahan
-                                                                </button>
-                                                            </div>
-                                                        </form>
-                                                    </div>
-                                                </div>
-                                            </div>
                                         </tr>
                                     @endforeach
                                 </tbody>
                             </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal modal-lg fade" id="editModal" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header bg-primary text-white">
+                                <h5 class="modal-title text-white">Edit Data Simpanan</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                    aria-label="Close"></button>
+                            </div>
+                            <form method="POST" action="" class="formEditSimpanan" id="formEditSimpanan">
+                                @csrf
+                                <div class="modal-body p-4">
+                                    <div class="row g-4">
+                                        <div class="col-md-5 border-end">
+                                            <h6 class="text-primary fw-bold mb-3 d-flex align-items-center">
+                                                <i class="bi bi-person-vcard fs-5 me-2"></i>
+                                                Data Anggota
+                                            </h6>
+                                            <div class="mb-3">
+                                                <label class="form-label text-muted small fw-semibold">Pilih Anggota</label>
+                                                <select name="id_user" class="form-select" required>
+                                                    @foreach ($user as $data)
+                                                        <option value="{{ $data->id }}">{{ $data->name }}</option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label text-muted small fw-semibold">Nama Penyetor</label>
+                                                <input type="text" class="form-control bg-light" name="nama_penyetor"
+                                                    required placeholder="Nama penyetor">
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label text-muted small fw-semibold">Tanggal
+                                                    Transaksi</label>
+                                                <input type="date" class="form-control bg-light" name="tanggal"
+                                                    required>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label text-muted small fw-semibold">Catatan</label>
+                                                <textarea class="form-control bg-light" name="keterangan" rows="3" placeholder="Tulis keterangan..."></textarea>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-7">
+                                            <h6 class="text-primary fw-bold mb-3 d-flex align-items-center">
+                                                <i class="bi bi-cash-stack fs-5 me-2"></i>
+                                                Rincian Simpanan
+                                            </h6>
+                                            <div class="bg-primary-subtle p-3 rounded mb-3">
+                                                <small class="text-primary fw-semibold">
+                                                    <i class="bi bi-info-circle-fill me-1"></i>
+                                                    Instruksi:
+                                                </small>
+                                                <p class="mb-0 small text-dark">Perbarui nominal sesuai kategori simpanan
+                                                    yang ingin diubah.</p>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label text-muted small fw-semibold">Kategori</label>
+                                                <input type="text" class="form-control bg-light" id="kategori_nama"
+                                                    readonly>
+                                                <input type="hidden" name="id_kategori">
+                                            </div>
+                                            <div class="card border shadow-none hover-shadow-sm transition-all">
+                                                <div
+                                                    class="card-body py-2 px-3 d-flex align-items-center justify-content-between">
+                                                    <label class="form-label mb-0 fw-medium text-dark flex-grow-1">
+                                                        Jumlah Bayar
+                                                    </label>
+                                                    <div class="input-group" style="width: 200px;">
+                                                        <input type="text"
+                                                            class="form-control fw-bold text-end rupiah-input"
+                                                            name="jumlah" placeholder="Rp 0">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="modal-footer bg-light px-4 py-3">
+                                    <button type="button" class="btn btn-outline-secondary px-4 fw-medium"
+                                        data-bs-dismiss="modal">
+                                        Batal
+                                    </button>
+                                    <button type="submit" class="btn btn-primary px-4 fw-bold shadow-sm">
+                                        Simpan Perubahan
+                                    </button>
+                                </div>
+                            </form>
                         </div>
                     </div>
                 </div>
@@ -489,6 +465,21 @@
                     let rawVal = $(this).val().replace(/[^0-9]/g, '');
                     $(this).val(rawVal);
                 });
+            });
+
+            var editActionBase = "{{ url('/simpanan/edit') }}";
+            $(document).on('click', '.btn-edit-simpanan', function() {
+                var btn = $(this);
+                var modal = $('#editModal');
+                var id = btn.data('id');
+                modal.find('form').attr('action', editActionBase + '/' + id);
+                modal.find('select[name=\"id_user\"]').val(btn.data('id-user'));
+                modal.find('input[name=\"nama_penyetor\"]').val(btn.data('nama-penyetor'));
+                modal.find('input[name=\"tanggal\"]').val(btn.data('tanggal'));
+                modal.find('textarea[name=\"keterangan\"]').val(btn.data('keterangan'));
+                modal.find('input[name=\"id_kategori\"]').val(btn.data('id-kategori'));
+                modal.find('#kategori_nama').val(btn.data('kategori-nama'));
+                modal.find('input[name=\"jumlah\"]').val(btn.data('jumlah'));
             });
 
             $(document).on('shown.bs.modal', function(e) {
