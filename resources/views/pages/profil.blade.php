@@ -1,4 +1,4 @@
-@extends('component.template')
+@extends('layouts.app')
 @section('content')
     <main class="main-wrapper">
         <div class="container-fluid">

@@ -1,4 +1,4 @@
-@extends('component.template')
+@extends('layouts.app')
 @if (auth()->user()->role == 'admin')
     @section('content')
         <main class="main-wrapper">
