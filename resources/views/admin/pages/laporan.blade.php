@@ -68,7 +68,6 @@
                                                     @if (isset($simpanan[$item->id][$data->id]))
                                                         <td>Rp. {{ number_format($simpanan[$item->id][$data->id]) }}</td>
                                                     @else
-                                                        (isset($tagihan[$item->id][$data->id]))
                                                         <td>0</td>
                                                     @endif
                                                 @elseif($data->jenis->nama == 'Tagihan')

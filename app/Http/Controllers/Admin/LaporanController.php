@@ -9,6 +9,7 @@ use App\Models\Kategori;
 use App\Models\TransaksiS;
 use App\Models\TransaksiT;
 use App\Models\User;
+use App\Models\PengambilanSimpanan;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -26,9 +27,16 @@ class LaporanController extends Controller
 
         $simpanan = TransaksiS::select('id_user', 'id_kategori', DB::raw('SUM(jumlah) AS jumlah'))->groupBy('id_user', 'id_kategori')
             ->get();
+        $pengambilan = PengambilanSimpanan::select('id_user', 'id_kategori', DB::raw('SUM(jumlah) AS jumlah'))
+            ->groupBy('id_user', 'id_kategori')->get();
         $tagihan = TransaksiT::select('id_user', 'id_kategori', DB::raw('SUM(jumlah) AS jumlah'))->groupBy('id_user', 'id_kategori')->get();
-        foreach ($simpanan as $key => $value) {
-            $data['simpanan'][$value->id_user][$value->id_kategori] = $value->jumlah;
+        $pengambilanMap = [];
+        foreach ($pengambilan as $p) {
+            $pengambilanMap[$p->id_user][$p->id_kategori] = $p->jumlah;
+        }
+        foreach ($simpanan as $value) {
+            $net = $value->jumlah - ($pengambilanMap[$value->id_user][$value->id_kategori] ?? 0);
+            $data['simpanan'][$value->id_user][$value->id_kategori] = $net;
         }
 
         foreach ($tagihan as $key => $value) {
@@ -53,13 +61,23 @@ class LaporanController extends Controller
             ->groupBy('id_user', 'id_kategori')
             ->get();
 
+        $pengambilan = PengambilanSimpanan::select('id_user', 'id_kategori', DB::raw('SUM(jumlah) AS jumlah'))
+            ->whereMonth('tanggal', '=', $formattedMonth)
+            ->whereYear('tanggal', '=', $formattedYear)
+            ->groupBy('id_user', 'id_kategori')
+            ->get();
+
         $tagihan = TransaksiT::select('id_user', 'id_kategori', DB::raw('SUM(jumlah) AS jumlah'))
             ->whereMonth('tanggal', '=', $formattedMonth)
             ->whereYear('tanggal', '=', $formattedYear)
             ->groupBy('id_user', 'id_kategori')
             ->get();
 
-        $userIds = array_merge($simpanan->pluck('id_user')->toArray(), $tagihan->pluck('id_user')->toArray());
+        $userIds = array_merge(
+            $simpanan->pluck('id_user')->toArray(),
+            $tagihan->pluck('id_user')->toArray(),
+            $pengambilan->pluck('id_user')->toArray()
+        );
         $userIds = array_unique($userIds);
 
         $data['user'] = User::whereIn('id', $userIds)->get();
@@ -67,8 +85,13 @@ class LaporanController extends Controller
         $data['simpanan'] = [];
         $data['tagihan'] = [];
 
+        $pengambilanMap = [];
+        foreach ($pengambilan as $p) {
+            $pengambilanMap[$p->id_user][$p->id_kategori] = $p->jumlah;
+        }
         foreach ($simpanan as $value) {
-            $data['simpanan'][$value->id_user][$value->id_kategori] = $value->jumlah;
+            $net = $value->jumlah - ($pengambilanMap[$value->id_user][$value->id_kategori] ?? 0);
+            $data['simpanan'][$value->id_user][$value->id_kategori] = $net;
         }
 
         foreach ($tagihan as $value) {
@@ -91,9 +114,16 @@ class LaporanController extends Controller
             ->groupBy('id_user', 'id_kategori')
             ->get();
 
+        $pengambilanData = PengambilanSimpanan::select('id_user', 'id_kategori', DB::raw('SUM(jumlah) AS jumlah'))
+            ->groupBy('id_user', 'id_kategori')
+            ->get();
+
         $lookup = [];
         foreach ($simpananData as $s) {
             $lookup[$s->id_user][$s->id_kategori] = $s->jumlah;
+        }
+        foreach ($pengambilanData as $p) {
+            $lookup[$p->id_user][$p->id_kategori] = ($lookup[$p->id_user][$p->id_kategori] ?? 0) - $p->jumlah;
         }
         foreach ($tagihanData as $t) {
             $lookup[$t->id_user][$t->id_kategori] = $t->jumlah;
@@ -182,9 +212,16 @@ class LaporanController extends Controller
             ->groupBy('id_user', 'id_kategori')
             ->get();
 
+        $pengambilanData = PengambilanSimpanan::select('id_user', 'id_kategori', DB::raw('SUM(jumlah) AS jumlah'))
+            ->whereMonth('tanggal', $formattedMonth)
+            ->whereYear('tanggal', $formattedYear)
+            ->groupBy('id_user', 'id_kategori')
+            ->get();
+
         $userIdsWithTransactions = array_merge(
             $simpananData->pluck('id_user')->toArray(),
-            $tagihanData->pluck('id_user')->toArray()
+            $tagihanData->pluck('id_user')->toArray(),
+            $pengambilanData->pluck('id_user')->toArray()
         );
         $userIdsWithTransactions = array_unique($userIdsWithTransactions);
 
@@ -193,6 +230,9 @@ class LaporanController extends Controller
         $lookup = [];
         foreach ($simpananData as $s) {
             $lookup[$s->id_user][$s->id_kategori] = $s->jumlah;
+        }
+        foreach ($pengambilanData as $p) {
+            $lookup[$p->id_user][$p->id_kategori] = ($lookup[$p->id_user][$p->id_kategori] ?? 0) - $p->jumlah;
         }
         foreach ($tagihanData as $t) {
             $lookup[$t->id_user][$t->id_kategori] = $t->jumlah;
