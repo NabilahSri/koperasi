@@ -102,6 +102,49 @@
                         </div>
 
                     </div>
+
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <div class="card border-0 shadow-sm">
+                                <div class="card-header bg-transparent border-0 p-4 pb-0">
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <h5 class="mb-0">Jumlah Transaksi per Bulan</h5>
+
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered table-striped align-middle">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th>Bulan</th>
+                                                    <th class="text-end">Simpanan</th>
+                                                    <th class="text-end">Tagihan</th>
+                                                    <th class="text-end">Pengambilan</th>
+                                                    <th class="text-end">Total</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach ($monthly_transactions as $row)
+                                                    <tr>
+                                                        <td>{{ $row['label'] }}</td>
+                                                        <td class="text-end">Rp
+                                                            {{ number_format($row['simpanan'], 0, ',', '.') }}</td>
+                                                        <td class="text-end">Rp
+                                                            {{ number_format($row['tagihan'], 0, ',', '.') }}</td>
+                                                        <td class="text-end">Rp
+                                                            {{ number_format($row['pengambilan'], 0, ',', '.') }}</td>
+                                                        <td class="text-end fw-bold">Rp
+                                                            {{ number_format($row['total'], 0, ',', '.') }}</td>
+                                                    </tr>
+                                                @endforeach
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </main>

@@ -8,6 +8,7 @@ use App\Models\Pengajuan;
 use App\Models\TransaksiS;
 use App\Models\TransaksiT;
 use App\Models\User;
+use App\Models\PengambilanSimpanan;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
@@ -46,6 +47,25 @@ class DashboardController extends Controller
 
         $tanggal = Carbon::now();
         $data['simpanan_masuk'] = TransaksiS::where('tanggal', $tanggal)->with('users')->get();
+
+        $monthly = [];
+        for ($i = 5; $i >= 0; $i--) {
+            $d = now()->subMonths($i);
+            $y = $d->year;
+            $m = $d->month;
+            $label = $d->locale('id')->isoFormat('MMM YYYY');
+            $simp = TransaksiS::whereYear('tanggal', $y)->whereMonth('tanggal', $m)->sum('jumlah');
+            $tag = TransaksiT::whereYear('tanggal', $y)->whereMonth('tanggal', $m)->sum('jumlah');
+            $ambil = PengambilanSimpanan::whereYear('tanggal', $y)->whereMonth('tanggal', $m)->sum('jumlah');
+            $monthly[] = [
+                'label' => $label,
+                'simpanan' => $simp,
+                'tagihan' => $tag,
+                'pengambilan' => $ambil,
+                'total' => $simp + $tag + $ambil,
+            ];
+        }
+        $data['monthly_transactions'] = $monthly;
 
         return view('admin.pages.dashboard', $data);
     }
