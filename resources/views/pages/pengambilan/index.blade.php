@@ -125,13 +125,15 @@
                                         <div class="col-md-6 border-end">
                                             <div class="mb-3">
                                                 <label class="form-label fw-bold">Pilih Anggota</label>
-                                                <select name="id_user" id="id_user_ambil" class="form-select user-select"
-                                                    required>
-                                                    <option value="" selected disabled>Cari nama anggota...</option>
-                                                    @foreach ($users as $data)
-                                                        <option value="{{ $data->id }}">{{ $data->name }}</option>
-                                                    @endforeach
-                                                </select>
+                                                <div class="position-relative">
+                                                    <input type="text" class="form-control" id="withdrawUserSearch" placeholder="Cari nama anggota..." autocomplete="off">
+                                                    <input type="hidden" name="id_user" id="withdraw_user_id_hidden" required>
+                                                    <div id="withdrawUserDropdown" class="dropdown-menu w-100 mt-1" style="max-height: 220px; overflow-y: auto; display: none;">
+                                                        @foreach ($users as $data)
+                                                            <button type="button" class="dropdown-item" data-id="{{ $data->id }}" data-name="{{ $data->name }}">{{ $data->name }}</button>
+                                                        @endforeach
+                                                    </div>
+                                                </div>
                                             </div>
                                             <div class="mb-3">
                                                 <label class="form-label fw-bold">Pilih Kategori</label>
@@ -196,20 +198,45 @@
 @section('script')
     <script>
         $(document).ready(function() {
-            // Modal Logic
-            $('.user-select').select2({
-                dropdownParent: $('#tambahModal'),
-                width: '100%'
-            });
-
-            $('#id_user_ambil').change(function() {
-                if ($(this).val()) {
-                    $('#id_kategori_ambil').prop('disabled', false);
-                    checkSaldo();
-                } else {
-                    $('#id_kategori_ambil').prop('disabled', true);
+            // Dropdown pencarian custom untuk anggota (tanpa Select2)
+            const wInput = document.getElementById('withdrawUserSearch');
+            const wHidden = document.getElementById('withdraw_user_id_hidden');
+            const wDrop = document.getElementById('withdrawUserDropdown');
+            if (wInput && wHidden && wDrop) {
+                const items = Array.from(wDrop.querySelectorAll('.dropdown-item'));
+                function showDrop() { wDrop.style.display = 'block'; }
+                function hideDrop() { wDrop.style.display = 'none'; }
+                function setSelection(id, name) { 
+                    wHidden.value = id; 
+                    wInput.value = name || ''; 
+                    if (id) {
+                        $('#id_kategori_ambil').prop('disabled', false);
+                        checkSaldo();
+                    } else {
+                        $('#id_kategori_ambil').prop('disabled', true);
+                    }
                 }
-            });
+                function filterList(q) {
+                    const s = (q || '').toLowerCase();
+                    items.forEach(it => {
+                        const n = String(it.getAttribute('data-name') || '').toLowerCase();
+                        it.style.display = s ? (n.includes(s) ? '' : 'none') : '';
+                    });
+                }
+                wInput.addEventListener('focus', function() { showDrop(); filterList(this.value); });
+                wInput.addEventListener('input', function() { showDrop(); filterList(this.value); });
+                items.forEach(it => {
+                    it.addEventListener('click', function() {
+                        setSelection(this.getAttribute('data-id') || '', this.getAttribute('data-name') || '');
+                        hideDrop();
+                    });
+                });
+                document.addEventListener('click', function(e) {
+                    if (!wDrop.contains(e.target) && e.target !== wInput) hideDrop();
+                });
+            }
+
+            // Aktifkan kategori ketika anggota dipilih dari dropdown custom dilakukan di setSelection()
 
             $('#id_kategori_ambil').change(function() {
                 checkSaldo();
@@ -234,7 +261,7 @@
             var currentSaldo = 0;
 
             function checkSaldo() {
-                var userId = $('#id_user_ambil').val();
+                var userId = $('#withdraw_user_id_hidden').val();
                 var catId = $('#id_kategori_ambil').val();
 
                 if (userId && catId) {
@@ -273,8 +300,9 @@
             // Reset modal on close
             $('#tambahModal').on('hidden.bs.modal', function() {
                 $(this).find('form').trigger('reset');
-                $('#id_user_ambil').val('').trigger('change');
-                $('#id_kategori_ambil').prop('disabled', true);
+                $('#withdraw_user_id_hidden').val('');
+                $('#withdrawUserSearch').val('');
+                $('#id_kategori_ambil').prop('disabled', true).val('');
                 $('#saldo_saat_ini').val('0');
                 $('#error-msg').hide();
                 $('button[type="submit"]').prop('disabled', false);
