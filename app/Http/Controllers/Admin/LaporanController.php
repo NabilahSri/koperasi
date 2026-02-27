@@ -30,13 +30,24 @@ class LaporanController extends Controller
         $pengambilan = PengambilanSimpanan::select('id_user', 'id_kategori', DB::raw('SUM(jumlah) AS jumlah'))
             ->groupBy('id_user', 'id_kategori')->get();
         $tagihan = TransaksiT::select('id_user', 'id_kategori', DB::raw('SUM(jumlah) AS jumlah'))->groupBy('id_user', 'id_kategori')->get();
-        $pengambilanMap = [];
-        foreach ($pengambilan as $p) {
-            $pengambilanMap[$p->id_user][$p->id_kategori] = $p->jumlah;
-        }
+        $data['pengambilan'] = [];
+        $data['pengambilan_total'] = [];
+        $data['pengambilan_manasuka_total'] = [];
+        $data['pengambilan_lebaran_total'] = [];
+        $manasukaIds = Kategori::whereIn('nama', ['Manasuka', 'Simpanan Manasuka'])->pluck('id')->toArray();
+        $lebaranIds = Kategori::whereIn('nama', ['Lebaran', 'Simpanan Lebaran'])->pluck('id')->toArray();
         foreach ($simpanan as $value) {
-            $net = $value->jumlah - ($pengambilanMap[$value->id_user][$value->id_kategori] ?? 0);
-            $data['simpanan'][$value->id_user][$value->id_kategori] = $net;
+            $data['simpanan'][$value->id_user][$value->id_kategori] = $value->jumlah;
+        }
+        foreach ($pengambilan as $p) {
+            $data['pengambilan'][$p->id_user][$p->id_kategori] = $p->jumlah;
+            $data['pengambilan_total'][$p->id_user] = ($data['pengambilan_total'][$p->id_user] ?? 0) + $p->jumlah;
+            if (in_array($p->id_kategori, $manasukaIds)) {
+                $data['pengambilan_manasuka_total'][$p->id_user] = ($data['pengambilan_manasuka_total'][$p->id_user] ?? 0) + $p->jumlah;
+            }
+            if (in_array($p->id_kategori, $lebaranIds)) {
+                $data['pengambilan_lebaran_total'][$p->id_user] = ($data['pengambilan_lebaran_total'][$p->id_user] ?? 0) + $p->jumlah;
+            }
         }
 
         foreach ($tagihan as $key => $value) {
@@ -84,14 +95,25 @@ class LaporanController extends Controller
 
         $data['simpanan'] = [];
         $data['tagihan'] = [];
+        $data['pengambilan'] = [];
+        $data['pengambilan_total'] = [];
+        $data['pengambilan_manasuka_total'] = [];
+        $data['pengambilan_lebaran_total'] = [];
+        $manasukaIds = Kategori::whereIn('nama', ['Manasuka', 'Simpanan Manasuka'])->pluck('id')->toArray();
+        $lebaranIds = Kategori::whereIn('nama', ['Lebaran', 'Simpanan Lebaran'])->pluck('id')->toArray();
 
-        $pengambilanMap = [];
-        foreach ($pengambilan as $p) {
-            $pengambilanMap[$p->id_user][$p->id_kategori] = $p->jumlah;
-        }
         foreach ($simpanan as $value) {
-            $net = $value->jumlah - ($pengambilanMap[$value->id_user][$value->id_kategori] ?? 0);
-            $data['simpanan'][$value->id_user][$value->id_kategori] = $net;
+            $data['simpanan'][$value->id_user][$value->id_kategori] = $value->jumlah;
+        }
+        foreach ($pengambilan as $p) {
+            $data['pengambilan'][$p->id_user][$p->id_kategori] = $p->jumlah;
+            $data['pengambilan_total'][$p->id_user] = ($data['pengambilan_total'][$p->id_user] ?? 0) + $p->jumlah;
+            if (in_array($p->id_kategori, $manasukaIds)) {
+                $data['pengambilan_manasuka_total'][$p->id_user] = ($data['pengambilan_manasuka_total'][$p->id_user] ?? 0) + $p->jumlah;
+            }
+            if (in_array($p->id_kategori, $lebaranIds)) {
+                $data['pengambilan_lebaran_total'][$p->id_user] = ($data['pengambilan_lebaran_total'][$p->id_user] ?? 0) + $p->jumlah;
+            }
         }
 
         foreach ($tagihan as $value) {
@@ -122,9 +144,6 @@ class LaporanController extends Controller
         foreach ($simpananData as $s) {
             $lookup[$s->id_user][$s->id_kategori] = $s->jumlah;
         }
-        foreach ($pengambilanData as $p) {
-            $lookup[$p->id_user][$p->id_kategori] = ($lookup[$p->id_user][$p->id_kategori] ?? 0) - $p->jumlah;
-        }
         foreach ($tagihanData as $t) {
             $lookup[$t->id_user][$t->id_kategori] = $t->jumlah;
         }
@@ -136,6 +155,8 @@ class LaporanController extends Controller
         }
         $headings[] = 'Jumlah Simpanan';
         $headings[] = 'Jumlah Tagihan';
+        $headings[] = 'Jumlah Pengambilan Manasuka';
+        $headings[] = 'Jumlah Pengambilan Lebaran';
 
         $colTotals = [];
         foreach ($kategoriList as $k) {
@@ -143,17 +164,26 @@ class LaporanController extends Controller
         }
         $grandTotalSimpanan = 0;
         $grandTotalTagihan = 0;
+        $grandTotalPengambilanManasuka = 0;
+        $grandTotalPengambilanLebaran = 0;
+        $manasukaIds = [];
+        $lebaranIds = [];
+        foreach ($kategoriList as $k) {
+            if (in_array($k->nama, ['Manasuka', 'Simpanan Manasuka'])) $manasukaIds[] = $k->id;
+            if (in_array($k->nama, ['Lebaran', 'Simpanan Lebaran'])) $lebaranIds[] = $k->id;
+        }
 
         foreach ($users as $key => $user) {
             $rowData = [
                 $key + 1,
-                $user->no_user,
                 $user->name,
                 $user->alamat,
             ];
 
             $userTotalSimpanan = 0;
             $userTotalTagihan = 0;
+            $userTotalPengambilanManasuka = 0;
+            $userTotalPengambilanLebaran = 0;
 
             foreach ($kategoriList as $k) {
                 $amount = $lookup[$user->id][$k->id] ?? 0;
@@ -167,12 +197,22 @@ class LaporanController extends Controller
                     $userTotalTagihan += $amount;
                 }
             }
+            foreach ($pengambilanData as $p) {
+                if ($p->id_user == $user->id) {
+                    if (in_array($p->id_kategori, $manasukaIds)) $userTotalPengambilanManasuka += $p->jumlah;
+                    if (in_array($p->id_kategori, $lebaranIds)) $userTotalPengambilanLebaran += $p->jumlah;
+                }
+            }
 
             $rowData[] = $userTotalSimpanan ?: '-';
             $rowData[] = $userTotalTagihan ?: '-';
+            $rowData[] = $userTotalPengambilanManasuka ?: '-';
+            $rowData[] = $userTotalPengambilanLebaran ?: '-';
 
             $grandTotalSimpanan += $userTotalSimpanan;
             $grandTotalTagihan += $userTotalTagihan;
+            $grandTotalPengambilanManasuka += $userTotalPengambilanManasuka;
+            $grandTotalPengambilanLebaran += $userTotalPengambilanLebaran;
 
             $data[] = $rowData;
         }
@@ -183,6 +223,8 @@ class LaporanController extends Controller
         }
         $totalRow[] = $grandTotalSimpanan ?: '-';
         $totalRow[] = $grandTotalTagihan ?: '-';
+        $totalRow[] = $grandTotalPengambilanManasuka ?: '-';
+        $totalRow[] = $grandTotalPengambilanLebaran ?: '-';
 
         $data[] = $totalRow;
 
@@ -231,9 +273,6 @@ class LaporanController extends Controller
         foreach ($simpananData as $s) {
             $lookup[$s->id_user][$s->id_kategori] = $s->jumlah;
         }
-        foreach ($pengambilanData as $p) {
-            $lookup[$p->id_user][$p->id_kategori] = ($lookup[$p->id_user][$p->id_kategori] ?? 0) - $p->jumlah;
-        }
         foreach ($tagihanData as $t) {
             $lookup[$t->id_user][$t->id_kategori] = $t->jumlah;
         }
@@ -245,6 +284,8 @@ class LaporanController extends Controller
         }
         $headings[] = 'Jumlah Simpanan';
         $headings[] = 'Jumlah Tagihan';
+        $headings[] = 'Jumlah Pengambilan Manasuka';
+        $headings[] = 'Jumlah Pengambilan Lebaran';
 
         $colTotals = [];
         foreach ($kategoriList as $k) {
@@ -252,17 +293,26 @@ class LaporanController extends Controller
         }
         $grandTotalSimpanan = 0;
         $grandTotalTagihan = 0;
+        $grandTotalPengambilanManasuka = 0;
+        $grandTotalPengambilanLebaran = 0;
+        $manasukaIds = [];
+        $lebaranIds = [];
+        foreach ($kategoriList as $k) {
+            if (in_array($k->nama, ['Manasuka', 'Simpanan Manasuka'])) $manasukaIds[] = $k->id;
+            if (in_array($k->nama, ['Lebaran', 'Simpanan Lebaran'])) $lebaranIds[] = $k->id;
+        }
 
         foreach ($users as $key => $user) {
             $rowData = [
                 $key + 1,
-                $user->no_user,
                 $user->name,
                 $user->alamat,
             ];
 
             $userTotalSimpanan = 0;
             $userTotalTagihan = 0;
+            $userTotalPengambilanManasuka = 0;
+            $userTotalPengambilanLebaran = 0;
 
             foreach ($kategoriList as $k) {
                 $amount = $lookup[$user->id][$k->id] ?? 0;
@@ -276,12 +326,22 @@ class LaporanController extends Controller
                     $userTotalTagihan += $amount;
                 }
             }
+            foreach ($pengambilanData as $p) {
+                if ($p->id_user == $user->id) {
+                    if (in_array($p->id_kategori, $manasukaIds)) $userTotalPengambilanManasuka += $p->jumlah;
+                    if (in_array($p->id_kategori, $lebaranIds)) $userTotalPengambilanLebaran += $p->jumlah;
+                }
+            }
 
             $rowData[] = $userTotalSimpanan ?: '-';
             $rowData[] = $userTotalTagihan ?: '-';
+            $rowData[] = $userTotalPengambilanManasuka ?: '-';
+            $rowData[] = $userTotalPengambilanLebaran ?: '-';
 
             $grandTotalSimpanan += $userTotalSimpanan;
             $grandTotalTagihan += $userTotalTagihan;
+            $grandTotalPengambilanManasuka += $userTotalPengambilanManasuka;
+            $grandTotalPengambilanLebaran += $userTotalPengambilanLebaran;
 
             $data[] = $rowData;
         }
@@ -292,6 +352,8 @@ class LaporanController extends Controller
         }
         $totalRow[] = $grandTotalSimpanan ?: '-';
         $totalRow[] = $grandTotalTagihan ?: '-';
+        $totalRow[] = $grandTotalPengambilanManasuka ?: '-';
+        $totalRow[] = $grandTotalPengambilanLebaran ?: '-';
 
         $data[] = $totalRow;
 

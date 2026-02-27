@@ -49,6 +49,9 @@ let dataSet = [
       "ordering": true,
       "info": true,
       "pageLength": 10,
+      "scrollX": true,
+      "scrollCollapse": true,
+      "autoWidth": false,
       language: {
         // search: '_INPUT_',
         search: '<i class="bi bi-search"></i>',

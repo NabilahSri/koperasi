@@ -43,24 +43,24 @@
                                 @endif
                             </div>
                         </div>
-                        <div class="table-responsive">
+                        <div>
                             <table id="table-1" class="display text-center">
                                 <thead>
                                     <tr>
                                         <th>No</th>
-                                        <th>No Anggota</th>
                                         <th>Nama</th>
                                         <th>Alamat</th>
                                         @foreach ($kategori as $item)
                                             <th>{{ $item->nama }}</th>
                                         @endforeach
+                                        <th>Pengambilan Manasuka</th>
+                                        <th>Pengambilan Lebaran</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @foreach ($user as $key => $item)
                                         <tr>
                                             <td>{{ $key + 1 }}</td>
-                                            <td>{{ $item->no_user }}</td>
                                             <td>{{ $item->name }}</td>
                                             <td>{{ $item->alamat }}</td>
                                             @foreach ($kategori as $data)
@@ -80,6 +80,8 @@
                                                     <td>0</td>
                                                 @endif
                                             @endforeach
+                                            <td>Rp. {{ number_format($pengambilan_manasuka_total[$item->id] ?? 0) }}</td>
+                                            <td>Rp. {{ number_format($pengambilan_lebaran_total[$item->id] ?? 0) }}</td>
                                         </tr>
                                     @endforeach
                                 </tbody>
