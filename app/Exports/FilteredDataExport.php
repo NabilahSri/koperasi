@@ -67,9 +67,8 @@ class FilteredDataExport implements FromCollection, WithHeadings, ShouldAutoSize
                             'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER],
                         ] : [];
     
-                        // Format numerical values as Indonesian Rupiah for specific columns (Columns starting from E - index 5)
-                        // Assuming columns A-D are fixed (No, No Anggota, Nama, Alamat)
-                        $format = ($col >= 5 && $row > 1) ? '_-"Rp"* #,##0_-;[Red]-"Rp"* #,##0_-' : null;
+                        // Format Rupiah mulai kolom D (index 4) karena kolom A-C adalah No, Nama, Alamat
+                        $format = ($col >= 4 && $row > 1) ? '_-"Rp"* #,##0_-;[Red]-"Rp"* #,##0_-' : null;
     
                         $event->sheet->getStyle($column . $row)->applyFromArray([
                             'borders' => [

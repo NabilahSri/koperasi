@@ -149,14 +149,12 @@ class LaporanController extends Controller
         }
 
         $data = [];
-        $headings = ['No', 'No Anggota', 'Nama', 'Alamat'];
+        $headings = ['No', 'Nama', 'Alamat'];
         foreach ($kategoriList as $k) {
             $headings[] = $k->nama;
         }
-        $headings[] = 'Jumlah Simpanan';
-        $headings[] = 'Jumlah Tagihan';
-        $headings[] = 'Jumlah Pengambilan Manasuka';
-        $headings[] = 'Jumlah Pengambilan Lebaran';
+        $headings[] = 'Pengambilan Manasuka';
+        $headings[] = 'Pengambilan Lebaran';
 
         $colTotals = [];
         foreach ($kategoriList as $k) {
@@ -204,13 +202,9 @@ class LaporanController extends Controller
                 }
             }
 
-            $rowData[] = $userTotalSimpanan ?: '-';
-            $rowData[] = $userTotalTagihan ?: '-';
             $rowData[] = $userTotalPengambilanManasuka ?: '-';
             $rowData[] = $userTotalPengambilanLebaran ?: '-';
 
-            $grandTotalSimpanan += $userTotalSimpanan;
-            $grandTotalTagihan += $userTotalTagihan;
             $grandTotalPengambilanManasuka += $userTotalPengambilanManasuka;
             $grandTotalPengambilanLebaran += $userTotalPengambilanLebaran;
 
@@ -221,8 +215,6 @@ class LaporanController extends Controller
         foreach ($kategoriList as $k) {
             $totalRow[] = $colTotals[$k->id] ?: '-';
         }
-        $totalRow[] = $grandTotalSimpanan ?: '-';
-        $totalRow[] = $grandTotalTagihan ?: '-';
         $totalRow[] = $grandTotalPengambilanManasuka ?: '-';
         $totalRow[] = $grandTotalPengambilanLebaran ?: '-';
 
@@ -278,14 +270,12 @@ class LaporanController extends Controller
         }
 
         $data = [];
-        $headings = ['No', 'No Anggota', 'Nama', 'Alamat'];
+        $headings = ['No', 'Nama', 'Alamat'];
         foreach ($kategoriList as $k) {
             $headings[] = $k->nama;
         }
-        $headings[] = 'Jumlah Simpanan';
-        $headings[] = 'Jumlah Tagihan';
-        $headings[] = 'Jumlah Pengambilan Manasuka';
-        $headings[] = 'Jumlah Pengambilan Lebaran';
+        $headings[] = 'Pengambilan Manasuka';
+        $headings[] = 'Pengambilan Lebaran';
 
         $colTotals = [];
         foreach ($kategoriList as $k) {
@@ -333,13 +323,9 @@ class LaporanController extends Controller
                 }
             }
 
-            $rowData[] = $userTotalSimpanan ?: '-';
-            $rowData[] = $userTotalTagihan ?: '-';
             $rowData[] = $userTotalPengambilanManasuka ?: '-';
             $rowData[] = $userTotalPengambilanLebaran ?: '-';
 
-            $grandTotalSimpanan += $userTotalSimpanan;
-            $grandTotalTagihan += $userTotalTagihan;
             $grandTotalPengambilanManasuka += $userTotalPengambilanManasuka;
             $grandTotalPengambilanLebaran += $userTotalPengambilanLebaran;
 
@@ -350,8 +336,6 @@ class LaporanController extends Controller
         foreach ($kategoriList as $k) {
             $totalRow[] = $colTotals[$k->id] ?: '-';
         }
-        $totalRow[] = $grandTotalSimpanan ?: '-';
-        $totalRow[] = $grandTotalTagihan ?: '-';
         $totalRow[] = $grandTotalPengambilanManasuka ?: '-';
         $totalRow[] = $grandTotalPengambilanLebaran ?: '-';
 

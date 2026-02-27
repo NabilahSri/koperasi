@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Exports;
 
 use Maatwebsite\Excel\Concerns\Exportable;
@@ -32,21 +33,21 @@ class LaporanExport implements FromCollection, WithHeadings, ShouldAutoSize, Wit
     {
         return $this->headings;
     }
-    
+
     public function registerEvents(): array
     {
         return [
-            AfterSheet::class => function(AfterSheet $event) {
+            AfterSheet::class => function (AfterSheet $event) {
                 $lastColumnIndex = count($this->headings);
                 $lastColumn = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($lastColumnIndex);
                 $cellRange = 'A1:' . $lastColumn . (count($this->data) + 1);
 
                 $event->sheet->getDelegate()->getStyle($cellRange)->getFont()->setSize(12);
-    
+
                 // Loop through each cell in the range to apply borders and formatting
                 for ($col = 1; $col <= $lastColumnIndex; $col++) {
                     $column = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($col);
-                    
+
                     for ($row = 1; $row <= count($this->data) + 1; $row++) {
                         // Apply a different style to header cells (row 1)
                         $headerStyle = ($row == 1) ? [
@@ -54,11 +55,10 @@ class LaporanExport implements FromCollection, WithHeadings, ShouldAutoSize, Wit
                             'font' => ['bold' => true, 'color' => ['rgb' => '000000']],
                             'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER],
                         ] : [];
-    
-                        // Format numerical values as Indonesian Rupiah for specific columns (Columns starting from E - index 5)
-                        // Assuming columns A-D are fixed (No, No Anggota, Nama, Alamat)
-                        $format = ($col >= 5 && $row > 1) ? '_-"Rp"* #,##0_-;[Red]-"Rp"* #,##0_-' : null;
-    
+
+                        // Format Rupiah mulai kolom D (index 4) karena kolom A-C adalah No, Nama, Alamat
+                        $format = ($col >= 4 && $row > 1) ? '_-"Rp"* #,##0_-;[Red]-"Rp"* #,##0_-' : null;
+
                         $event->sheet->getStyle($column . $row)->applyFromArray([
                             'borders' => [
                                 'outline' => [
@@ -67,7 +67,7 @@ class LaporanExport implements FromCollection, WithHeadings, ShouldAutoSize, Wit
                                 ],
                             ],
                         ] + $headerStyle);
-    
+
                         if ($format) {
                             $event->sheet->getStyle($column . $row)->getNumberFormat()->setFormatCode($format);
                         }
@@ -76,7 +76,4 @@ class LaporanExport implements FromCollection, WithHeadings, ShouldAutoSize, Wit
             }
         ];
     }
-    
 }
-
-
