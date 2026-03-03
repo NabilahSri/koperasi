@@ -36,6 +36,13 @@ class LaporanController extends Controller
         $data['pengambilan_lebaran_total'] = [];
         $manasukaIds = Kategori::whereIn('nama', ['Manasuka', 'Simpanan Manasuka'])->pluck('id')->toArray();
         $lebaranIds = Kategori::whereIn('nama', ['Lebaran', 'Simpanan Lebaran'])->pluck('id')->toArray();
+        $pinjamanKategori = Kategori::where('nama', 'Pinjaman')->first();
+        $bagihasilKategori = Kategori::whereIn('nama', ['Bagihasil', 'Bagi Hasil', 'Bagi hasil'])->first();
+        $data['pinjaman_total'] = [];
+        $data['pinjaman_dibayar'] = [];
+        $data['pinjaman_sisa'] = [];
+        $data['bagihasil_total'] = [];
+        $data['bagihasil_dibayar'] = [];
         foreach ($simpanan as $value) {
             $data['simpanan'][$value->id_user][$value->id_kategori] = $value->jumlah;
         }
@@ -52,6 +59,39 @@ class LaporanController extends Controller
 
         foreach ($tagihan as $key => $value) {
             $data['tagihan'][$value->id_user][$value->id_kategori] = $value->jumlah;
+        }
+
+        // Hitung pinjaman total, dibayar, sisa (semua waktu)
+        $pinjamanTotal = \App\Models\Pengajuan::select('id_user', DB::raw('SUM(nominal_pinjaman) AS total'))
+            ->groupBy('id_user')->get();
+        foreach ($pinjamanTotal as $pt) {
+            $data['pinjaman_total'][$pt->id_user] = $pt->total;
+        }
+        $dibayarQuery = TransaksiT::select('id_user', DB::raw('SUM(jumlah) AS total'))->groupBy('id_user');
+        if ($pinjamanKategori) $dibayarQuery->where('id_kategori', $pinjamanKategori->id);
+        $dibayarList = $dibayarQuery->get();
+        foreach ($dibayarList as $dp) {
+            $data['pinjaman_dibayar'][$dp->id_user] = $dp->total;
+        }
+        foreach (User::all() as $u) {
+            $t = $data['pinjaman_total'][$u->id] ?? 0;
+            $d = $data['pinjaman_dibayar'][$u->id] ?? 0;
+            $data['pinjaman_sisa'][$u->id] = max($t - $d, 0);
+        }
+
+        // Bagi hasil total (all time) dan dibayar (all time)
+        $bagihasilTotal = \App\Models\Pengajuan::select('id_user', DB::raw('SUM(nominal_bagihasil) AS total'))
+            ->groupBy('id_user')->get();
+        foreach ($bagihasilTotal as $bh) {
+            $data['bagihasil_total'][$bh->id_user] = $bh->total;
+        }
+        $bagihasilDibayarQuery = TransaksiT::select('id_user', DB::raw('SUM(jumlah) AS total'))->groupBy('id_user');
+        if ($bagihasilKategori) {
+            $bagihasilDibayarQuery->where('id_kategori', $bagihasilKategori->id);
+        }
+        $bagihasilDibayarList = $bagihasilDibayarQuery->get();
+        foreach ($bagihasilDibayarList as $bd) {
+            $data['bagihasil_dibayar'][$bd->id_user] = $bd->total;
         }
 
         return view('admin.pages.laporan', $data);
@@ -101,6 +141,13 @@ class LaporanController extends Controller
         $data['pengambilan_lebaran_total'] = [];
         $manasukaIds = Kategori::whereIn('nama', ['Manasuka', 'Simpanan Manasuka'])->pluck('id')->toArray();
         $lebaranIds = Kategori::whereIn('nama', ['Lebaran', 'Simpanan Lebaran'])->pluck('id')->toArray();
+        $pinjamanKategori = Kategori::where('nama', 'Pinjaman')->first();
+        $bagihasilKategori = Kategori::whereIn('nama', ['Bagihasil', 'Bagi Hasil', 'Bagi hasil'])->first();
+        $data['pinjaman_total'] = [];
+        $data['pinjaman_dibayar'] = [];
+        $data['pinjaman_sisa'] = [];
+        $data['bagihasil_total'] = [];
+        $data['bagihasil_dibayar'] = [];
 
         foreach ($simpanan as $value) {
             $data['simpanan'][$value->id_user][$value->id_kategori] = $value->jumlah;
@@ -118,6 +165,43 @@ class LaporanController extends Controller
 
         foreach ($tagihan as $value) {
             $data['tagihan'][$value->id_user][$value->id_kategori] = $value->jumlah;
+        }
+
+        // Pinjaman total (semua waktu), dibayar (sesuai filter bulan), sisa
+        $pinjamanTotal = \App\Models\Pengajuan::select('id_user', DB::raw('SUM(nominal_pinjaman) AS total'))
+            ->groupBy('id_user')->get();
+        foreach ($pinjamanTotal as $pt) {
+            $data['pinjaman_total'][$pt->id_user] = $pt->total;
+        }
+        $dibayarQuery = TransaksiT::select('id_user', DB::raw('SUM(jumlah) AS total'))
+            ->whereMonth('tanggal', '=', $formattedMonth)
+            ->whereYear('tanggal', '=', $formattedYear)
+            ->groupBy('id_user');
+        if ($pinjamanKategori) $dibayarQuery->where('id_kategori', $pinjamanKategori->id);
+        $dibayarList = $dibayarQuery->get();
+        foreach ($dibayarList as $dp) {
+            $data['pinjaman_dibayar'][$dp->id_user] = $dp->total;
+        }
+        foreach ($data['user'] as $u) {
+            $t = $data['pinjaman_total'][$u->id] ?? 0;
+            $d = $data['pinjaman_dibayar'][$u->id] ?? 0;
+            $data['pinjaman_sisa'][$u->id] = max($t - $d, 0);
+        }
+
+        // Bagi hasil total (all time), dibayar (filtered by month)
+        $bagihasilTotal = \App\Models\Pengajuan::select('id_user', DB::raw('SUM(nominal_bagihasil) AS total'))
+            ->groupBy('id_user')->get();
+        foreach ($bagihasilTotal as $bh) {
+            $data['bagihasil_total'][$bh->id_user] = $bh->total;
+        }
+        $bagihasilDibayarQuery = TransaksiT::select('id_user', DB::raw('SUM(jumlah) AS total'))
+            ->whereMonth('tanggal', '=', $formattedMonth)
+            ->whereYear('tanggal', '=', $formattedYear)
+            ->groupBy('id_user');
+        if ($bagihasilKategori) $bagihasilDibayarQuery->where('id_kategori', $bagihasilKategori->id);
+        $bagihasilDibayarList = $bagihasilDibayarQuery->get();
+        foreach ($bagihasilDibayarList as $bd) {
+            $data['bagihasil_dibayar'][$bd->id_user] = $bd->total;
         }
 
         return view('admin.pages.laporan', $data);
@@ -151,25 +235,57 @@ class LaporanController extends Controller
         $data = [];
         $headings = ['No', 'Nama', 'Alamat'];
         foreach ($kategoriList as $k) {
+            if ($k->jenis && $k->jenis->nama === 'Tagihan' && $k->nama === 'Pinjaman') {
+                continue;
+            }
             $headings[] = $k->nama;
         }
+        $headings[] = 'Nominal Pinjaman';
+        $headings[] = 'Pinjaman Terbayar';
+        $headings[] = 'Sisa Pinjaman';
+        $headings[] = 'Nominal Bagi Hasil';
+        $headings[] = 'Jumlah Nominal Bagi Hasil';
         $headings[] = 'Pengambilan Manasuka';
         $headings[] = 'Pengambilan Lebaran';
 
         $colTotals = [];
         foreach ($kategoriList as $k) {
+            if ($k->jenis && $k->jenis->nama === 'Tagihan' && $k->nama === 'Pinjaman') {
+                continue;
+            }
             $colTotals[$k->id] = 0;
         }
-        $grandTotalSimpanan = 0;
-        $grandTotalTagihan = 0;
+        $grandTotalPinjamanTotal = 0;
+        $grandTotalPinjamanDibayar = 0;
+        $grandTotalPinjamanSisa = 0;
         $grandTotalPengambilanManasuka = 0;
         $grandTotalPengambilanLebaran = 0;
         $manasukaIds = [];
         $lebaranIds = [];
+        $pinjamanKategori = Kategori::where('nama', 'Pinjaman')->first();
+        $bagihasilKategori = Kategori::whereIn('nama', ['Bagihasil', 'Bagi Hasil', 'Bagi hasil'])->first();
         foreach ($kategoriList as $k) {
             if (in_array($k->nama, ['Manasuka', 'Simpanan Manasuka'])) $manasukaIds[] = $k->id;
             if (in_array($k->nama, ['Lebaran', 'Simpanan Lebaran'])) $lebaranIds[] = $k->id;
         }
+
+        // Pinjaman totals (all time) and dibayar (all time) for export
+        $pinjamanTotal = \App\Models\Pengajuan::select('id_user', DB::raw('SUM(nominal_pinjaman) AS total'))
+            ->groupBy('id_user')->get()->keyBy('id_user');
+        $pinjamanDibayarQuery = TransaksiT::select('id_user', DB::raw('SUM(jumlah) AS total'));
+        if ($pinjamanKategori) {
+            $pinjamanDibayarQuery->where('id_kategori', $pinjamanKategori->id);
+        }
+        $pinjamanDibayar = $pinjamanDibayarQuery->groupBy('id_user')->get()->keyBy('id_user');
+
+        // Bagihasil totals (all time) and dibayar (all time)
+        $bagihasilTotal = \App\Models\Pengajuan::select('id_user', DB::raw('SUM(nominal_bagihasil) AS total'))
+            ->groupBy('id_user')->get()->keyBy('id_user');
+        $bagihasilDibayarQuery = TransaksiT::select('id_user', DB::raw('SUM(jumlah) AS total'));
+        if ($bagihasilKategori) {
+            $bagihasilDibayarQuery->where('id_kategori', $bagihasilKategori->id);
+        }
+        $bagihasilDibayar = $bagihasilDibayarQuery->groupBy('id_user')->get()->keyBy('id_user');
 
         foreach ($users as $key => $user) {
             $rowData = [
@@ -178,22 +294,17 @@ class LaporanController extends Controller
                 $user->alamat,
             ];
 
-            $userTotalSimpanan = 0;
-            $userTotalTagihan = 0;
             $userTotalPengambilanManasuka = 0;
             $userTotalPengambilanLebaran = 0;
 
             foreach ($kategoriList as $k) {
+                if ($k->jenis && $k->jenis->nama === 'Tagihan' && $k->nama === 'Pinjaman') {
+                    continue;
+                }
                 $amount = $lookup[$user->id][$k->id] ?? 0;
                 $rowData[] = $amount ?: '-';
 
                 $colTotals[$k->id] += $amount;
-
-                if ($k->jenis && stripos($k->jenis->nama, 'Simpanan') !== false) {
-                    $userTotalSimpanan += $amount;
-                } else {
-                    $userTotalTagihan += $amount;
-                }
             }
             foreach ($pengambilanData as $p) {
                 if ($p->id_user == $user->id) {
@@ -202,9 +313,23 @@ class LaporanController extends Controller
                 }
             }
 
+            $userPinjamanTotal = $pinjamanTotal->get($user->id)->total ?? 0;
+            $userPinjamanDibayar = $pinjamanDibayar->get($user->id)->total ?? 0;
+            $userPinjamanSisa = max($userPinjamanTotal - $userPinjamanDibayar, 0);
+
+            $rowData[] = $userPinjamanTotal ?: '-';
+            $rowData[] = $userPinjamanDibayar ?: '-';
+            $rowData[] = $userPinjamanSisa ?: '-';
+            $rowData[] = ($bagihasilTotal->get($user->id)->total ?? 0) ?: '-';
+            $rowData[] = ($bagihasilDibayar->get($user->id)->total ?? 0) ?: '-';
             $rowData[] = $userTotalPengambilanManasuka ?: '-';
             $rowData[] = $userTotalPengambilanLebaran ?: '-';
 
+            $grandTotalPinjamanTotal += $userPinjamanTotal;
+            $grandTotalPinjamanDibayar += $userPinjamanDibayar;
+            $grandTotalPinjamanSisa += $userPinjamanSisa;
+            $grandTotalBagihasilTotal = ($grandTotalBagihasilTotal ?? 0) + ($bagihasilTotal->get($user->id)->total ?? 0);
+            $grandTotalBagihasilDibayar = ($grandTotalBagihasilDibayar ?? 0) + ($bagihasilDibayar->get($user->id)->total ?? 0);
             $grandTotalPengambilanManasuka += $userTotalPengambilanManasuka;
             $grandTotalPengambilanLebaran += $userTotalPengambilanLebaran;
 
@@ -213,8 +338,16 @@ class LaporanController extends Controller
 
         $totalRow = ['', '', '', ''];
         foreach ($kategoriList as $k) {
+            if ($k->jenis && $k->jenis->nama === 'Tagihan' && $k->nama === 'Pinjaman') {
+                continue;
+            }
             $totalRow[] = $colTotals[$k->id] ?: '-';
         }
+        $totalRow[] = $grandTotalPinjamanTotal ?: '-';
+        $totalRow[] = $grandTotalPinjamanDibayar ?: '-';
+        $totalRow[] = $grandTotalPinjamanSisa ?: '-';
+        $totalRow[] = ($grandTotalBagihasilTotal ?? 0) ?: '-';
+        $totalRow[] = ($grandTotalBagihasilDibayar ?? 0) ?: '-';
         $totalRow[] = $grandTotalPengambilanManasuka ?: '-';
         $totalRow[] = $grandTotalPengambilanLebaran ?: '-';
 
@@ -272,25 +405,64 @@ class LaporanController extends Controller
         $data = [];
         $headings = ['No', 'Nama', 'Alamat'];
         foreach ($kategoriList as $k) {
+            if ($k->jenis && $k->jenis->nama === 'Tagihan' && $k->nama === 'Pinjaman') {
+                continue;
+            }
             $headings[] = $k->nama;
         }
+        $headings[] = 'Nominal Pinjaman';
+        $headings[] = 'Pinjaman Terbayar';
+        $headings[] = 'Sisa Pinjaman';
+        $headings[] = 'Nominal Bagi Hasil';
+        $headings[] = 'Jumlah Nominal Bagi Hasil';
         $headings[] = 'Pengambilan Manasuka';
         $headings[] = 'Pengambilan Lebaran';
 
         $colTotals = [];
         foreach ($kategoriList as $k) {
+            if ($k->jenis && $k->jenis->nama === 'Tagihan' && $k->nama === 'Pinjaman') {
+                continue;
+            }
             $colTotals[$k->id] = 0;
         }
-        $grandTotalSimpanan = 0;
-        $grandTotalTagihan = 0;
+        $grandTotalPinjamanTotal = 0;
+        $grandTotalPinjamanDibayar = 0;
+        $grandTotalPinjamanSisa = 0;
         $grandTotalPengambilanManasuka = 0;
         $grandTotalPengambilanLebaran = 0;
+        $grandTotalBagihasilTotal = 0;
+        $grandTotalBagihasilDibayar = 0;
         $manasukaIds = [];
         $lebaranIds = [];
+        $pinjamanKategori = Kategori::where('nama', 'Pinjaman')->first();
+        $bagihasilKategori = Kategori::whereIn('nama', ['Bagihasil', 'Bagi Hasil', 'Bagi hasil'])->first();
         foreach ($kategoriList as $k) {
             if (in_array($k->nama, ['Manasuka', 'Simpanan Manasuka'])) $manasukaIds[] = $k->id;
             if (in_array($k->nama, ['Lebaran', 'Simpanan Lebaran'])) $lebaranIds[] = $k->id;
         }
+
+        // Pinjaman total (all time), dibayar (filtered by month), sisa
+        $pinjamanTotal = \App\Models\Pengajuan::select('id_user', DB::raw('SUM(nominal_pinjaman) AS total'))
+            ->groupBy('id_user')->get()->keyBy('id_user');
+        $pinjamanDibayarQuery = TransaksiT::select('id_user', DB::raw('SUM(jumlah) AS total'))
+            ->whereMonth('tanggal', $formattedMonth)
+            ->whereYear('tanggal', $formattedYear);
+        if ($pinjamanKategori) {
+            $pinjamanDibayarQuery->where('id_kategori', $pinjamanKategori->id);
+        }
+        $pinjamanDibayar = $pinjamanDibayarQuery->groupBy('id_user')->get()->keyBy('id_user');
+
+        // Bagihasil total (all time) dan dibayar (sesuai filter bulan)
+        $bagihasilTotal = \App\Models\Pengajuan::select('id_user', DB::raw('SUM(nominal_bagihasil) AS total'))
+            ->groupBy('id_user')->get()->keyBy('id_user');
+        $bagihasilDibayarQuery = TransaksiT::where('id_kategori', $bagihasilKategori->id)
+            ->select('id_user', DB::raw('SUM(jumlah) AS total'))
+            ->whereMonth('tanggal', $formattedMonth)
+            ->whereYear('tanggal', $formattedYear);
+        if ($bagihasilKategori) {
+            $bagihasilDibayarQuery->where('id_kategori', $bagihasilKategori->id);
+        }
+        $bagihasilDibayar = $bagihasilDibayarQuery->groupBy('id_user')->get()->keyBy('id_user');
 
         foreach ($users as $key => $user) {
             $rowData = [
@@ -299,22 +471,17 @@ class LaporanController extends Controller
                 $user->alamat,
             ];
 
-            $userTotalSimpanan = 0;
-            $userTotalTagihan = 0;
             $userTotalPengambilanManasuka = 0;
             $userTotalPengambilanLebaran = 0;
 
             foreach ($kategoriList as $k) {
+                if ($k->jenis && $k->jenis->nama === 'Tagihan' && $k->nama === 'Pinjaman') {
+                    continue;
+                }
                 $amount = $lookup[$user->id][$k->id] ?? 0;
                 $rowData[] = $amount ?: '-';
 
                 $colTotals[$k->id] += $amount;
-
-                if ($k->jenis && stripos($k->jenis->nama, 'Simpanan') !== false) {
-                    $userTotalSimpanan += $amount;
-                } else {
-                    $userTotalTagihan += $amount;
-                }
             }
             foreach ($pengambilanData as $p) {
                 if ($p->id_user == $user->id) {
@@ -323,9 +490,23 @@ class LaporanController extends Controller
                 }
             }
 
+            $userPinjamanTotal = $pinjamanTotal->get($user->id)->total ?? 0;
+            $userPinjamanDibayar = $pinjamanDibayar->get($user->id)->total ?? 0;
+            $userPinjamanSisa = max($userPinjamanTotal - $userPinjamanDibayar, 0);
+
+            $rowData[] = $userPinjamanTotal ?: '-';
+            $rowData[] = $userPinjamanDibayar ?: '-';
+            $rowData[] = $userPinjamanSisa ?: '-';
+            $rowData[] = ($bagihasilTotal->get($user->id)->total ?? 0) ?: '-';
+            $rowData[] = ($bagihasilDibayar->get($user->id)->total ?? 0) ?: '-';
             $rowData[] = $userTotalPengambilanManasuka ?: '-';
             $rowData[] = $userTotalPengambilanLebaran ?: '-';
 
+            $grandTotalPinjamanTotal += $userPinjamanTotal;
+            $grandTotalPinjamanDibayar += $userPinjamanDibayar;
+            $grandTotalPinjamanSisa += $userPinjamanSisa;
+            $grandTotalBagihasilTotal += ($bagihasilTotal->get($user->id)->total ?? 0);
+            $grandTotalBagihasilDibayar += ($bagihasilDibayar->get($user->id)->total ?? 0);
             $grandTotalPengambilanManasuka += $userTotalPengambilanManasuka;
             $grandTotalPengambilanLebaran += $userTotalPengambilanLebaran;
 
@@ -334,8 +515,16 @@ class LaporanController extends Controller
 
         $totalRow = ['', '', '', ''];
         foreach ($kategoriList as $k) {
+            if ($k->jenis && $k->jenis->nama === 'Tagihan' && $k->nama === 'Pinjaman') {
+                continue;
+            }
             $totalRow[] = $colTotals[$k->id] ?: '-';
         }
+        $totalRow[] = $grandTotalPinjamanTotal ?: '-';
+        $totalRow[] = $grandTotalPinjamanDibayar ?: '-';
+        $totalRow[] = $grandTotalPinjamanSisa ?: '-';
+        $totalRow[] = $grandTotalBagihasilTotal ?: '-';
+        $totalRow[] = $grandTotalBagihasilDibayar ?: '-';
         $totalRow[] = $grandTotalPengambilanManasuka ?: '-';
         $totalRow[] = $grandTotalPengambilanLebaran ?: '-';
 

@@ -5,7 +5,7 @@
             <div class="inner-contents">
                 <div class="card border-0 shadow-sm">
                     <div class="card-header bg-transparent border-0 p-5 pb-0">
-                        <h4 class="mb-0">Data Pengajuan Pinjaman</h4>
+                        <h4 class="mb-0">Data Piutang</h4>
                     </div>
                     <div class="card-body pt-2">
                         <div class="d-flex justify-content-end align-items-end">
@@ -60,7 +60,7 @@
                                                                 <i class="bi bi-exclamation-circle display-4"></i>
                                                             </div>
                                                             <h5 class="fw-bold mb-2">Hapus Data?</h5>
-                                                            <p class="text-muted small mb-4">Data pengajuan
+                                                            <p class="text-muted small mb-4">Data Piutang
                                                                 "{{ $item->user->name }}" akan dihapus permanen.</p>
                                                             <div class="d-flex justify-content-center gap-2">
                                                                 <button type="button"
@@ -78,7 +78,7 @@
                                                 <div class="modal-dialog modal-dialog-centered">
                                                     <div class="modal-content">
                                                         <div class="modal-header bg-primary text-white">
-                                                            <h5 class="modal-title text-white">Edit Data Pengajuan</h5>
+                                                            <h5 class="modal-title text-white">Edit Data Piutang</h5>
                                                             <button type="button" class="btn-close" data-bs-dismiss="modal"
                                                                 aria-label="Close"></button>
                                                         </div>
@@ -191,7 +191,7 @@
                     <div class="modal-dialog modal-dialog-centered">
                         <div class="modal-content">
                             <div class="modal-header bg-primary text-white">
-                                <h5 class="modal-title text-white">Tambah Data Pengajuan</h5>
+                                <h5 class="modal-title text-white">Tambah Data Piutang</h5>
                                 <button type="button" class="btn-close" data-bs-dismiss="modal"
                                     aria-label="Close"></button>
                             </div>

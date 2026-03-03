@@ -51,8 +51,15 @@
                                         <th>Nama</th>
                                         <th>Alamat</th>
                                         @foreach ($kategori as $item)
-                                            <th>{{ $item->nama }}</th>
+                                            @if (!($item->jenis->nama == 'Tagihan'))
+                                                <th>{{ $item->nama }}</th>
+                                            @endif
                                         @endforeach
+                                        <th>Nominal Pinjaman</th>
+                                        <th>Pinjaman Terbayar</th>
+                                        <th>Sisa Pinjaman</th>
+                                        <th>Nominal Bagi Hasil</th>
+                                        <th>Jumlah Nominal Bagi Hasil</th>
                                         <th>Pengambilan Manasuka</th>
                                         <th>Pengambilan Lebaran</th>
                                     </tr>
@@ -64,6 +71,9 @@
                                             <td>{{ $item->name }}</td>
                                             <td>{{ $item->alamat }}</td>
                                             @foreach ($kategori as $data)
+                                                @if ($data->jenis->nama == 'Tagihan')
+                                                    @php continue; @endphp
+                                                @endif
                                                 @if ($data->jenis->nama == 'Simpanan')
                                                     @if (isset($simpanan[$item->id][$data->id]))
                                                         <td>Rp. {{ number_format($simpanan[$item->id][$data->id]) }}</td>
@@ -80,6 +90,11 @@
                                                     <td>0</td>
                                                 @endif
                                             @endforeach
+                                            <td>Rp. {{ number_format($pinjaman_total[$item->id] ?? 0) }}</td>
+                                            <td>Rp. {{ number_format($pinjaman_dibayar[$item->id] ?? 0) }}</td>
+                                            <td>Rp. {{ number_format($pinjaman_sisa[$item->id] ?? 0) }}</td>
+                                            <td>Rp. {{ number_format($bagihasil_total[$item->id] ?? 0) }}</td>
+                                            <td>Rp. {{ number_format($bagihasil_dibayar[$item->id] ?? 0) }}</td>
                                             <td>Rp. {{ number_format($pengambilan_manasuka_total[$item->id] ?? 0) }}</td>
                                             <td>Rp. {{ number_format($pengambilan_lebaran_total[$item->id] ?? 0) }}</td>
                                         </tr>
