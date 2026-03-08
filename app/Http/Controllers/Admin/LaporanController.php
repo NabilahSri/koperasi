@@ -21,7 +21,7 @@ class LaporanController extends Controller
     public function index()
     {
         $data['kategori'] = Kategori::orderBy('id_jenis')->get();
-        $data['user'] = User::all();
+        $data['user'] = User::where('role', 'anggota')->get();
         $data['simpanan'] = [];
         $data['tagihan'] = [];
 
@@ -131,7 +131,7 @@ class LaporanController extends Controller
         );
         $userIds = array_unique($userIds);
 
-        $data['user'] = User::whereIn('id', $userIds)->get();
+        $data['user'] = User::where('role', 'anggota')->whereIn('id', $userIds)->get();
 
         $data['simpanan'] = [];
         $data['tagihan'] = [];
@@ -209,7 +209,7 @@ class LaporanController extends Controller
 
     public function export()
     {
-        $users = User::all();
+        $users = User::where('role', 'anggota')->get();
         $kategoriList = Kategori::with('jenis')->orderBy('id_jenis')->get();
 
         $simpananData = TransaksiS::select('id_user', 'id_kategori', DB::raw('SUM(jumlah) AS jumlah'))
@@ -392,7 +392,7 @@ class LaporanController extends Controller
         );
         $userIdsWithTransactions = array_unique($userIdsWithTransactions);
 
-        $users = User::whereIn('id', $userIdsWithTransactions)->get();
+        $users = User::where('role', 'anggota')->whereIn('id', $userIdsWithTransactions)->get();
 
         $lookup = [];
         foreach ($simpananData as $s) {
