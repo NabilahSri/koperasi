@@ -14,9 +14,18 @@
                         </div>
 
                         <div class="card-body pt-2">
-                            <div class="d-flex justify-content-end align-items-end">
-                                <span class="btn btn-sm btn-primary mb-2" data-bs-toggle="modal"
-                                    data-bs-target="#primaryModal">Tambah</span>
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <form action="{{ url('users') }}" method="GET" class="d-flex gap-2">
+                                    <select name="role" class="form-select form-select-sm" onchange="this.form.submit()">
+                                        <option value="">Semua Role</option>
+                                        <option value="admin" {{ request('role') == 'admin' ? 'selected' : '' }}>Admin
+                                        </option>
+                                        <option value="anggota" {{ request('role') == 'anggota' ? 'selected' : '' }}>Anggota
+                                        </option>
+                                    </select>
+                                </form>
+                                <button class="btn btn-sm btn-primary" data-bs-toggle="modal"
+                                    data-bs-target="#primaryModal">Tambah</button>
                             </div>
                             <div class="table-responsive">
                                 <table id="table-6" class="display text-center">
@@ -141,7 +150,8 @@
                                                                                     <label
                                                                                         class="form-label small text-muted fw-bold">Password</label>
                                                                                     <input type="password"
-                                                                                        class="form-control" name="password"
+                                                                                        class="form-control"
+                                                                                        name="password"
                                                                                         placeholder="(Kosong jika tetap)">
                                                                                 </div>
                                                                             </div>

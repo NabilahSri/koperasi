@@ -13,9 +13,16 @@ use Illuminate\Validation\Rules\Password;
 
 class UserAdminController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $data['users'] = User::orderBy('role', 'asc')->get();
+        $query = User::orderBy('role', 'asc');
+
+        if ($request->has('role') && $request->role != '') {
+            $query->where('role', $request->role);
+        }
+
+        $data['users'] = $query->get();
+        $data['currentRole'] = $request->role;
 
         $lastUser = User::orderByRaw('CAST(no_user AS UNSIGNED) DESC')->first();
         $data['nextNoUser'] = $lastUser ? str_pad((int)$lastUser->no_user + 1, 3, '0', STR_PAD_LEFT) : '001';
