@@ -15,16 +15,9 @@
                 <li class="menu-section-title text-gray ff-heading fs-16 fw-bold text-uppercase mt-4 mb-2">
                     <span>PAGES</span>
                 </li>
-                <li class="menu-item menu-item-has-children {{ request()->is('users*') ? 'active' : '' }}"><a
-                        href="javascript:void(0);"> <span class="nav-icon flex-shrink-0"><i
+                <li class="menu-item {{ request()->is('users*') ? 'active' : '' }}"><a
+                        href="{{ url('users') }}"> <span class="nav-icon flex-shrink-0"><i
                                 class="bi bi-people fs-18"></i></span> <span class="nav-text">Users</span></a>
-                    <ul class="sub-menu">
-                        <li class="menu-item {{ request()->is('users/admin') ? 'active' : '' }}"><a
-                                href="{{ url('users/admin') }}"> Admin </a></li>
-                        <li class="menu-item {{ request()->is('users/anggota') ? 'active' : '' }}"><a
-                                href="{{ url('users/anggota') }}"> Anggota </a></li>
-                    </ul>
-                    <span class='submenu-opener'><i class='bi bi-chevron-right'></i></span>
                 </li>
                 <li class="menu-item {{ request()->is('tunggakan') ? 'active' : '' }}"><a
                         href="{{ url('tunggakan') }}"><span class="nav-icon flex-shrink-0"><i

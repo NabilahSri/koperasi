@@ -6,7 +6,6 @@ use App\Http\Controllers\Admin\JenisController;
 use App\Http\Controllers\Admin\KategoriController;
 use App\Http\Controllers\Admin\SimpananController;
 use App\Http\Controllers\Admin\UserAdminController;
-use App\Http\Controllers\Anggota\UserAnggotaController;
 use App\Http\Controllers\Admin\TunggakanController;
 use App\Http\Controllers\Admin\TagihanController;
 use App\Http\Controllers\Admin\PengajuanController;
@@ -38,15 +37,10 @@ Route::post('/tagihan/pengajuan/create', [PengajuanController::class, 'create'])
 Route::post('/tagihan/pengajuan/edit/{id}', [PengajuanController::class, 'edit']);
 Route::get('/tagihan/pengajuan/delete/{id}', [PengajuanController::class, 'delete']);
 
-Route::get('/users/admin', [UserAdminController::class, 'index']);
-Route::post('/users/admin/create', [UserAdminController::class, 'create']);
-Route::post('/users/admin/edit/{id}', [UserAdminController::class, 'edit']);
-Route::get('/users/admin/delete/{id}', [UserAdminController::class, 'delete']);
-
-Route::get('/users/anggota', [UserAnggotaController::class, 'index']);
-Route::post('/users/anggota/create', [UserAnggotaController::class, 'create']);
-Route::post('/users/anggota/edit/{id}', [UserAnggotaController::class, 'edit']);
-Route::get('/users/anggota/delete/{id}', [UserAnggotaController::class, 'delete']);
+Route::get('/users', [UserAdminController::class, 'index']);
+Route::post('/users/create', [UserAdminController::class, 'create']);
+Route::post('/users/edit/{id}', [UserAdminController::class, 'edit']);
+Route::get('/users/delete/{id}', [UserAdminController::class, 'delete']);
 
 Route::get('/tunggakan', [TunggakanController::class, 'index']);
 

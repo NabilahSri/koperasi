@@ -15,8 +15,12 @@ class UserAdminController extends Controller
 {
     public function index()
     {
-        $data['admin'] = User::where('role', 'admin')->get();
-        return view('admin.pages.admin', $data);
+        $data['users'] = User::orderBy('role', 'asc')->get();
+
+        $lastUser = User::orderByRaw('CAST(no_user AS UNSIGNED) DESC')->first();
+        $data['nextNoUser'] = $lastUser ? str_pad((int)$lastUser->no_user + 1, 3, '0', STR_PAD_LEFT) : '001';
+
+        return view('admin.pages.users', $data);
     }
 
     public function create(Request $req)
@@ -42,7 +46,7 @@ class UserAdminController extends Controller
             'password' => bcrypt($req->password),
             'foto' => $photoPath,
             'ktp' => $photoKTP,
-            'role' => 'admin'
+            'role' => $req->role
         ]);
 
         if ($user) {
@@ -74,7 +78,7 @@ class UserAdminController extends Controller
             }
         }
 
-        return redirect('/users/admin');
+        return redirect('/users');
     }
 
     public function edit(Request $req, $id)
@@ -86,7 +90,7 @@ class UserAdminController extends Controller
             'email' => $req->email,
             'alamat' => $req->alamat,
             'nohp' => $req->nohp,
-            'role' => 'admin'
+            'role' => $req->role
         ];
         if (!empty($req->password)) {
             $userData['password'] = bcrypt($req->password);
@@ -111,7 +115,7 @@ class UserAdminController extends Controller
         $user->fill($userData);
         $user->save();
 
-        return redirect('/users/admin');
+        return redirect('/users');
     }
 
     public function delete(Request $req)
@@ -128,6 +132,6 @@ class UserAdminController extends Controller
             }
         }
 
-        return redirect('/users/admin');
+        return redirect('/users');
     }
 }

@@ -9,7 +9,7 @@
                     <div class="card-header bg-transparent border-0 p-5 pb-0">
                         <div class="row">
                             <div class="col-md-6 col-12 text-muted">
-                                <h4 class="mb-0">Data Admin</h4>
+                                <h4 class="mb-0">Data Users</h4>
                             </div>
                         </div>
 
@@ -23,26 +23,34 @@
                                     <thead>
                                         <tr>
                                             <th>No</th>
-                                            <th>Anggota</th>
+                                            <th>Nama</th>
+                                            <th>Role</th>
                                             <th>Email</th>
                                             <th>No Hp</th>
                                             <th>Aksi</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        @foreach ($admin as $key => $item)
+                                        @foreach ($users as $key => $item)
                                             <tr>
                                                 <td>{{ $key + 1 }}</td>
                                                 <td>
                                                     <div class="employee d-flex gap-2 flex-wrap">
                                                         <div class="profilepicture flex-shrink-0 d-none d-xl-block">
-                                                            <img src="{{ asset('storage/' . $item->foto) }}" alt="img"
-                                                                width="50">
+                                                            <img src="{{ $item->foto ? asset('storage/' . $item->foto) : asset('assets/img/user-placeholder.png') }}"
+                                                                alt="img" width="50">
                                                         </div>
                                                         <div class="description mt-2">
                                                             <h6>{{ $item->name }}</h6>
+                                                            <small class="text-muted">{{ $item->no_user }}</small>
                                                         </div>
                                                     </div>
+                                                </td>
+                                                <td>
+                                                    <span
+                                                        class="badge {{ $item->role == 'admin' ? 'bg-primary' : 'bg-success' }}">
+                                                        {{ ucfirst($item->role) }}
+                                                    </span>
                                                 </td>
                                                 <td>{{ $item->email }}</td>
                                                 <td>{{ $item->nohp }}</td>
@@ -72,7 +80,7 @@
                                                                 <button type="button"
                                                                     class="btn btn-light btn-sm px-3 fw-medium"
                                                                     data-bs-dismiss="modal">Batal</button>
-                                                                <a href="/users/admin/delete/{{ $item->id }}"
+                                                                <a href="/users/delete/{{ $item->id }}"
                                                                     class="btn btn-danger btn-sm px-3 fw-bold">Hapus</a>
                                                             </div>
                                                         </div>
@@ -84,11 +92,11 @@
                                                 <div class="modal-dialog modal-dialog-centered">
                                                     <div class="modal-content">
                                                         <div class="modal-header bg-primary text-white">
-                                                            <h5 class="modal-title text-white">Ubah Data Admin</h5>
+                                                            <h5 class="modal-title text-white">Ubah Data User</h5>
                                                             <button type="button" class="btn-close btn-close-white"
                                                                 data-bs-dismiss="modal" aria-label="Close"></button>
                                                         </div>
-                                                        <form action="/users/admin/edit/{{ $item->id }}"
+                                                        <form action="/users/edit/{{ $item->id }}"
                                                             enctype="multipart/form-data" method="POST">
                                                             @csrf
                                                             <div class="modal-body p-4">
@@ -99,16 +107,29 @@
                                                                             Akun</h6>
                                                                         <div class="p-3 bg-light">
                                                                             <div class="row g-3">
-                                                                                <div class="col-md-4">
+                                                                                <div class="col-md-12">
+                                                                                    <label
+                                                                                        class="form-label small text-muted fw-bold">Role</label>
+                                                                                    <select class="form-select"
+                                                                                        name="role" required>
+                                                                                        <option value="admin"
+                                                                                            {{ $item->role == 'admin' ? 'selected' : '' }}>
+                                                                                            Admin</option>
+                                                                                        <option value="anggota"
+                                                                                            {{ $item->role == 'anggota' ? 'selected' : '' }}>
+                                                                                            Anggota</option>
+                                                                                    </select>
+                                                                                </div>
+                                                                                <div class="col-md">
                                                                                     <label
                                                                                         class="form-label small text-muted fw-bold">No
                                                                                         User</label>
-                                                                                    <input type="number"
+                                                                                    <input type="text"
                                                                                         class="form-control" name="no_user"
                                                                                         value="{{ $item->no_user }}"
-                                                                                        required>
+                                                                                        readonly>
                                                                                 </div>
-                                                                                <div class="col-md-4">
+                                                                                <div class="col-md">
                                                                                     <label
                                                                                         class="form-label small text-muted fw-bold">Email</label>
                                                                                     <input type="email"
@@ -116,12 +137,12 @@
                                                                                         value="{{ $item->email }}"
                                                                                         required>
                                                                                 </div>
-                                                                                <div class="col-md-4">
+                                                                                <div class="col-md">
                                                                                     <label
                                                                                         class="form-label small text-muted fw-bold">Password</label>
                                                                                     <input type="password"
                                                                                         class="form-control" name="password"
-                                                                                        placeholder="(Biarkan kosong jika tidak diubah)">
+                                                                                        placeholder="(Kosong jika tetap)">
                                                                                 </div>
                                                                             </div>
                                                                         </div>
@@ -221,11 +242,11 @@
                             <div class="modal-dialog modal-dialog-centered">
                                 <div class="modal-content">
                                     <div class="modal-header bg-primary text-white">
-                                        <h5 class="modal-title text-white">Tambah Data Admin</h5>
+                                        <h5 class="modal-title text-white">Tambah Data User</h5>
                                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
                                             aria-label="Close"></button>
                                     </div>
-                                    <form action="/users/admin/create" enctype="multipart/form-data" method="POST">
+                                    <form action="/users/create" enctype="multipart/form-data" method="POST">
                                         @csrf
                                         <div class="modal-body p-4">
                                             <div class="row g-4">
@@ -234,19 +255,27 @@
                                                             class="bi bi-shield-lock me-2"></i>Informasi Akun</h6>
                                                     <div class="p-3 bg-light">
                                                         <div class="row g-3">
-                                                            <div class="col-md-4">
+                                                            <div class="col-md-12">
+                                                                <label
+                                                                    class="form-label small text-muted fw-bold">Role</label>
+                                                                <select class="form-select" name="role" required>
+                                                                    <option value="anggota" selected>Anggota</option>
+                                                                    <option value="admin">Admin</option>
+                                                                </select>
+                                                            </div>
+                                                            <div class="col-md">
                                                                 <label class="form-label small text-muted fw-bold">No
                                                                     User</label>
-                                                                <input type="number" class="form-control" name="no_user"
-                                                                    placeholder="12345" required>
+                                                                <input type="text" class="form-control" name="no_user"
+                                                                    value="{{ $nextNoUser }}" readonly>
                                                             </div>
-                                                            <div class="col-md-4">
+                                                            <div class="col-md">
                                                                 <label
                                                                     class="form-label small text-muted fw-bold">Email</label>
                                                                 <input type="email" class="form-control" name="email"
                                                                     placeholder="email@example.com" required>
                                                             </div>
-                                                            <div class="col-md-4">
+                                                            <div class="col-md">
                                                                 <label
                                                                     class="form-label small text-muted fw-bold">Password</label>
                                                                 <input type="password" class="form-control"
@@ -289,7 +318,7 @@
                                                                 <div class="input-group">
                                                                     <input type="text"
                                                                         class="form-control fw-bold currency-input"
-                                                                        name="iuran_wajib" placeholder="Rp 0" required>
+                                                                        name="iuran_wajib" placeholder="Rp 0">
                                                                 </div>
                                                             </div>
                                                             <div class="col-md-6">
@@ -298,7 +327,7 @@
                                                                 <div class="input-group">
                                                                     <input type="text"
                                                                         class="form-control fw-bold currency-input"
-                                                                        name="iuran_pokok" placeholder="Rp 0" required>
+                                                                        name="iuran_pokok" placeholder="Rp 0">
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -401,7 +430,7 @@
         });
 
         function formatRupiah(angka, prefix) {
-            var number_string = angka.replace(/[^,\\d]/g, '').toString(),
+            var number_string = angka.replace(/[^,\d]/g, '').toString(),
                 split = number_string.split(','),
                 sisa = split[0].length % 3,
                 rupiah = split[0].substr(0, sisa),

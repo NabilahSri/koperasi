@@ -155,8 +155,8 @@
                                                                                                     name="transaksi[{{ $data->id }}][jumlah]"
                                                                                                     placeholder="Rp 0"
                                                                                                     value="{{ $inputValue }}"
-                                                                                                    {{ $readonlyAttribute }}
-                                                                                                    style="{{ $bgStyle }}">
+                                                                                                    {{-- {{ $readonlyAttribute }} --}}
+                                                                                                    {{-- style="{{ $bgStyle }}" --}}>
                                                                                             </div>
                                                                                         </div>
                                                                                     </div>
