@@ -74,6 +74,14 @@
                                 @csrf
                                 <div class="modal-body">
                                     <div class="row">
+                                        <div class="form-group col-12 mb-3">
+                                            <label class="form-label">Preview Foto</label>
+                                            <div class="d-flex justify-content-center">
+                                                <img id="profilePhotoPreview{{ $user->id }}"
+                                                    src="{{ $user->foto ? asset('storage/' . $user->foto) : asset('assets/img/user-placeholder.png') }}"
+                                                    class="img-thumbnail" style="max-height: 180px;">
+                                            </div>
+                                        </div>
                                         <div class="form-group col-md-6 mb-3">
                                             <label class="form-label">Nama</label>
                                             <input type="text" class="form-control" name="name"
@@ -118,4 +126,46 @@
             </div>
         </div>
     </main>
+@endsection
+
+@section('script')
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const modalEl = document.getElementById('editprofile{{ $user->id }}');
+            if (!modalEl) return;
+
+            const fileInput = modalEl.querySelector('input[name="foto"]');
+            const previewImg = modalEl.querySelector('#profilePhotoPreview{{ $user->id }}');
+            if (!fileInput || !previewImg) return;
+
+            const initialSrc = previewImg.getAttribute('src') || '';
+            let objectUrl = null;
+
+            fileInput.addEventListener('change', function() {
+                const file = this.files && this.files[0];
+
+                if (objectUrl) {
+                    URL.revokeObjectURL(objectUrl);
+                    objectUrl = null;
+                }
+
+                if (!file) {
+                    if (initialSrc) previewImg.src = initialSrc;
+                    return;
+                }
+
+                objectUrl = URL.createObjectURL(file);
+                previewImg.src = objectUrl;
+            });
+
+            modalEl.addEventListener('hidden.bs.modal', function() {
+                if (objectUrl) {
+                    URL.revokeObjectURL(objectUrl);
+                    objectUrl = null;
+                }
+                if (initialSrc) previewImg.src = initialSrc;
+                fileInput.value = '';
+            });
+        });
+    </script>
 @endsection
