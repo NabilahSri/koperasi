@@ -29,6 +29,7 @@ Route::middleware(['statuslogin'])->group(function () {
     require __DIR__ . '/web/admin.php';
     require __DIR__ . '/web/anggota.php';
     Route::get('/profile', [LoginController::class, 'show']);
+    Route::post('/profile/update', [LoginController::class, 'updateProfile'])->name('profile.update');
 });
 
 Route::post('/login', [LoginController::class, 'auth']);
