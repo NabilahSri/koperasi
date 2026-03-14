@@ -336,7 +336,7 @@ class LaporanController extends Controller
             $data[] = $rowData;
         }
 
-        $totalRow = ['', '', '', ''];
+        $totalRow = ['', '', ''];
         foreach ($kategoriList as $k) {
             if ($k->jenis && $k->jenis->nama === 'Tagihan' && $k->nama === 'Pinjaman') {
                 continue;
@@ -513,7 +513,7 @@ class LaporanController extends Controller
             $data[] = $rowData;
         }
 
-        $totalRow = ['', '', '', ''];
+        $totalRow = ['', '', ''];
         foreach ($kategoriList as $k) {
             if ($k->jenis && $k->jenis->nama === 'Tagihan' && $k->nama === 'Pinjaman') {
                 continue;
