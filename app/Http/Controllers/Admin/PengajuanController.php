@@ -21,14 +21,20 @@ class PengajuanController extends Controller
         $req->validate([
             'id_user' => 'required',
             'nominal_pinjaman' => 'required',
+            'propisi' => 'nullable',
             'nominal_bagihasil' => 'required',
             'tanggal_pengajuan' => 'required',
         ]);
         $nominal_pinjaman = preg_replace('/[^0-9]/', '', $req->nominal_pinjaman);
+        $propisi = preg_replace('/[^0-9]/', '', (string) $req->propisi);
         $nominal_bagihasil = preg_replace('/[^0-9]/', '', $req->nominal_bagihasil);
+        if ($propisi === '') {
+            $propisi = (string) ((int) round(((int) $nominal_pinjaman) * 0.01));
+        }
         Pengajuan::create([
             'id_user' => $req->id_user,
             'nominal_pinjaman' => $nominal_pinjaman,
+            'propisi' => $propisi,
             'nominal_bagihasil' => $nominal_bagihasil,
             'tanggal_pengajuan' => $req->tanggal_pengajuan,
             'keterangan' => 'belum lunas',
@@ -41,16 +47,22 @@ class PengajuanController extends Controller
         $req->validate([
             'id_user' => 'required',
             'nominal_pinjaman' => 'required',
+            'propisi' => 'nullable',
             'nominal_bagihasil' => 'required',
             'tanggal_pengajuan' => 'required',
         ]);
 
         $nominal_pinjaman = preg_replace('/[^0-9]/', '', $req->nominal_pinjaman);
+        $propisi = preg_replace('/[^0-9]/', '', (string) $req->propisi);
         $nominal_bagihasil = preg_replace('/[^0-9]/', '', $req->nominal_bagihasil);
+        if ($propisi === '') {
+            $propisi = (string) ((int) round(((int) $nominal_pinjaman) * 0.01));
+        }
 
         Pengajuan::where('id', $req->id)->update([
             'id_user' => $req->id_user,
             'nominal_pinjaman' => $nominal_pinjaman,
+            'propisi' => $propisi,
             'nominal_bagihasil' => $nominal_bagihasil,
             'tanggal_pengajuan' => $req->tanggal_pengajuan,
         ]);

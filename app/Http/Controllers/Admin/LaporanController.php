@@ -34,6 +34,10 @@ class LaporanController extends Controller
         $data['pengambilan_total'] = [];
         $data['pengambilan_manasuka_total'] = [];
         $data['pengambilan_lebaran_total'] = [];
+        $data['simpanan_manasuka_total'] = [];
+        $data['simpanan_lebaran_total'] = [];
+        $data['sisa_manasuka_total'] = [];
+        $data['sisa_lebaran_total'] = [];
         $manasukaIds = Kategori::whereIn('nama', ['Manasuka', 'Simpanan Manasuka'])->pluck('id')->toArray();
         $lebaranIds = Kategori::whereIn('nama', ['Lebaran', 'Simpanan Lebaran'])->pluck('id')->toArray();
         $pinjamanKategori = Kategori::where('nama', 'Pinjaman')->first();
@@ -45,6 +49,12 @@ class LaporanController extends Controller
         $data['bagihasil_dibayar'] = [];
         foreach ($simpanan as $value) {
             $data['simpanan'][$value->id_user][$value->id_kategori] = $value->jumlah;
+            if (in_array($value->id_kategori, $manasukaIds)) {
+                $data['simpanan_manasuka_total'][$value->id_user] = ($data['simpanan_manasuka_total'][$value->id_user] ?? 0) + $value->jumlah;
+            }
+            if (in_array($value->id_kategori, $lebaranIds)) {
+                $data['simpanan_lebaran_total'][$value->id_user] = ($data['simpanan_lebaran_total'][$value->id_user] ?? 0) + $value->jumlah;
+            }
         }
         foreach ($pengambilan as $p) {
             $data['pengambilan'][$p->id_user][$p->id_kategori] = $p->jumlah;
@@ -59,6 +69,16 @@ class LaporanController extends Controller
 
         foreach ($tagihan as $key => $value) {
             $data['tagihan'][$value->id_user][$value->id_kategori] = $value->jumlah;
+        }
+
+        foreach ($data['user'] as $u) {
+            $simpM = $data['simpanan_manasuka_total'][$u->id] ?? 0;
+            $ambilM = $data['pengambilan_manasuka_total'][$u->id] ?? 0;
+            $data['sisa_manasuka_total'][$u->id] = max($simpM - $ambilM, 0);
+
+            $simpL = $data['simpanan_lebaran_total'][$u->id] ?? 0;
+            $ambilL = $data['pengambilan_lebaran_total'][$u->id] ?? 0;
+            $data['sisa_lebaran_total'][$u->id] = max($simpL - $ambilL, 0);
         }
 
         // Hitung pinjaman total, dibayar, sisa (semua waktu)
@@ -139,6 +159,10 @@ class LaporanController extends Controller
         $data['pengambilan_total'] = [];
         $data['pengambilan_manasuka_total'] = [];
         $data['pengambilan_lebaran_total'] = [];
+        $data['simpanan_manasuka_total'] = [];
+        $data['simpanan_lebaran_total'] = [];
+        $data['sisa_manasuka_total'] = [];
+        $data['sisa_lebaran_total'] = [];
         $manasukaIds = Kategori::whereIn('nama', ['Manasuka', 'Simpanan Manasuka'])->pluck('id')->toArray();
         $lebaranIds = Kategori::whereIn('nama', ['Lebaran', 'Simpanan Lebaran'])->pluck('id')->toArray();
         $pinjamanKategori = Kategori::where('nama', 'Pinjaman')->first();
@@ -151,6 +175,12 @@ class LaporanController extends Controller
 
         foreach ($simpanan as $value) {
             $data['simpanan'][$value->id_user][$value->id_kategori] = $value->jumlah;
+            if (in_array($value->id_kategori, $manasukaIds)) {
+                $data['simpanan_manasuka_total'][$value->id_user] = ($data['simpanan_manasuka_total'][$value->id_user] ?? 0) + $value->jumlah;
+            }
+            if (in_array($value->id_kategori, $lebaranIds)) {
+                $data['simpanan_lebaran_total'][$value->id_user] = ($data['simpanan_lebaran_total'][$value->id_user] ?? 0) + $value->jumlah;
+            }
         }
         foreach ($pengambilan as $p) {
             $data['pengambilan'][$p->id_user][$p->id_kategori] = $p->jumlah;
@@ -165,6 +195,16 @@ class LaporanController extends Controller
 
         foreach ($tagihan as $value) {
             $data['tagihan'][$value->id_user][$value->id_kategori] = $value->jumlah;
+        }
+
+        foreach ($data['user'] as $u) {
+            $simpM = $data['simpanan_manasuka_total'][$u->id] ?? 0;
+            $ambilM = $data['pengambilan_manasuka_total'][$u->id] ?? 0;
+            $data['sisa_manasuka_total'][$u->id] = max($simpM - $ambilM, 0);
+
+            $simpL = $data['simpanan_lebaran_total'][$u->id] ?? 0;
+            $ambilL = $data['pengambilan_lebaran_total'][$u->id] ?? 0;
+            $data['sisa_lebaran_total'][$u->id] = max($simpL - $ambilL, 0);
         }
 
         // Pinjaman total (semua waktu), dibayar (sesuai filter bulan), sisa
@@ -247,6 +287,8 @@ class LaporanController extends Controller
         $headings[] = 'Jumlah Nominal Bagi Hasil';
         $headings[] = 'Pengambilan Manasuka';
         $headings[] = 'Pengambilan Lebaran';
+        $headings[] = 'Sisa Tabungan Manasuka';
+        $headings[] = 'Sisa Tabungan Lebaran';
 
         $colTotals = [];
         foreach ($kategoriList as $k) {
@@ -260,6 +302,8 @@ class LaporanController extends Controller
         $grandTotalPinjamanSisa = 0;
         $grandTotalPengambilanManasuka = 0;
         $grandTotalPengambilanLebaran = 0;
+        $grandTotalSisaManasuka = 0;
+        $grandTotalSisaLebaran = 0;
         $manasukaIds = [];
         $lebaranIds = [];
         $pinjamanKategori = Kategori::where('nama', 'Pinjaman')->first();
@@ -296,6 +340,8 @@ class LaporanController extends Controller
 
             $userTotalPengambilanManasuka = 0;
             $userTotalPengambilanLebaran = 0;
+            $userTotalSimpananManasuka = 0;
+            $userTotalSimpananLebaran = 0;
 
             foreach ($kategoriList as $k) {
                 if ($k->jenis && $k->jenis->nama === 'Tagihan' && $k->nama === 'Pinjaman') {
@@ -305,6 +351,13 @@ class LaporanController extends Controller
                 $rowData[] = $amount ?: '-';
 
                 $colTotals[$k->id] += $amount;
+
+                if (in_array($k->id, $manasukaIds)) {
+                    $userTotalSimpananManasuka += $amount;
+                }
+                if (in_array($k->id, $lebaranIds)) {
+                    $userTotalSimpananLebaran += $amount;
+                }
             }
             foreach ($pengambilanData as $p) {
                 if ($p->id_user == $user->id) {
@@ -324,6 +377,10 @@ class LaporanController extends Controller
             $rowData[] = ($bagihasilDibayar->get($user->id)->total ?? 0) ?: '-';
             $rowData[] = $userTotalPengambilanManasuka ?: '-';
             $rowData[] = $userTotalPengambilanLebaran ?: '-';
+            $userSisaManasuka = max($userTotalSimpananManasuka - $userTotalPengambilanManasuka, 0);
+            $userSisaLebaran = max($userTotalSimpananLebaran - $userTotalPengambilanLebaran, 0);
+            $rowData[] = $userSisaManasuka ?: '-';
+            $rowData[] = $userSisaLebaran ?: '-';
 
             $grandTotalPinjamanTotal += $userPinjamanTotal;
             $grandTotalPinjamanDibayar += $userPinjamanDibayar;
@@ -332,6 +389,8 @@ class LaporanController extends Controller
             $grandTotalBagihasilDibayar = ($grandTotalBagihasilDibayar ?? 0) + ($bagihasilDibayar->get($user->id)->total ?? 0);
             $grandTotalPengambilanManasuka += $userTotalPengambilanManasuka;
             $grandTotalPengambilanLebaran += $userTotalPengambilanLebaran;
+            $grandTotalSisaManasuka += $userSisaManasuka;
+            $grandTotalSisaLebaran += $userSisaLebaran;
 
             $data[] = $rowData;
         }
@@ -350,6 +409,8 @@ class LaporanController extends Controller
         $totalRow[] = ($grandTotalBagihasilDibayar ?? 0) ?: '-';
         $totalRow[] = $grandTotalPengambilanManasuka ?: '-';
         $totalRow[] = $grandTotalPengambilanLebaran ?: '-';
+        $totalRow[] = $grandTotalSisaManasuka ?: '-';
+        $totalRow[] = $grandTotalSisaLebaran ?: '-';
 
         $data[] = $totalRow;
 
@@ -417,6 +478,8 @@ class LaporanController extends Controller
         $headings[] = 'Jumlah Nominal Bagi Hasil';
         $headings[] = 'Pengambilan Manasuka';
         $headings[] = 'Pengambilan Lebaran';
+        $headings[] = 'Sisa Tabungan Manasuka';
+        $headings[] = 'Sisa Tabungan Lebaran';
 
         $colTotals = [];
         foreach ($kategoriList as $k) {
@@ -430,6 +493,8 @@ class LaporanController extends Controller
         $grandTotalPinjamanSisa = 0;
         $grandTotalPengambilanManasuka = 0;
         $grandTotalPengambilanLebaran = 0;
+        $grandTotalSisaManasuka = 0;
+        $grandTotalSisaLebaran = 0;
         $grandTotalBagihasilTotal = 0;
         $grandTotalBagihasilDibayar = 0;
         $manasukaIds = [];
@@ -473,6 +538,8 @@ class LaporanController extends Controller
 
             $userTotalPengambilanManasuka = 0;
             $userTotalPengambilanLebaran = 0;
+            $userTotalSimpananManasuka = 0;
+            $userTotalSimpananLebaran = 0;
 
             foreach ($kategoriList as $k) {
                 if ($k->jenis && $k->jenis->nama === 'Tagihan' && $k->nama === 'Pinjaman') {
@@ -482,6 +549,13 @@ class LaporanController extends Controller
                 $rowData[] = $amount ?: '-';
 
                 $colTotals[$k->id] += $amount;
+
+                if (in_array($k->id, $manasukaIds)) {
+                    $userTotalSimpananManasuka += $amount;
+                }
+                if (in_array($k->id, $lebaranIds)) {
+                    $userTotalSimpananLebaran += $amount;
+                }
             }
             foreach ($pengambilanData as $p) {
                 if ($p->id_user == $user->id) {
@@ -501,6 +575,10 @@ class LaporanController extends Controller
             $rowData[] = ($bagihasilDibayar->get($user->id)->total ?? 0) ?: '-';
             $rowData[] = $userTotalPengambilanManasuka ?: '-';
             $rowData[] = $userTotalPengambilanLebaran ?: '-';
+            $userSisaManasuka = max($userTotalSimpananManasuka - $userTotalPengambilanManasuka, 0);
+            $userSisaLebaran = max($userTotalSimpananLebaran - $userTotalPengambilanLebaran, 0);
+            $rowData[] = $userSisaManasuka ?: '-';
+            $rowData[] = $userSisaLebaran ?: '-';
 
             $grandTotalPinjamanTotal += $userPinjamanTotal;
             $grandTotalPinjamanDibayar += $userPinjamanDibayar;
@@ -509,6 +587,8 @@ class LaporanController extends Controller
             $grandTotalBagihasilDibayar += ($bagihasilDibayar->get($user->id)->total ?? 0);
             $grandTotalPengambilanManasuka += $userTotalPengambilanManasuka;
             $grandTotalPengambilanLebaran += $userTotalPengambilanLebaran;
+            $grandTotalSisaManasuka += $userSisaManasuka;
+            $grandTotalSisaLebaran += $userSisaLebaran;
 
             $data[] = $rowData;
         }
@@ -527,6 +607,8 @@ class LaporanController extends Controller
         $totalRow[] = $grandTotalBagihasilDibayar ?: '-';
         $totalRow[] = $grandTotalPengambilanManasuka ?: '-';
         $totalRow[] = $grandTotalPengambilanLebaran ?: '-';
+        $totalRow[] = $grandTotalSisaManasuka ?: '-';
+        $totalRow[] = $grandTotalSisaLebaran ?: '-';
 
         $data[] = $totalRow;
 

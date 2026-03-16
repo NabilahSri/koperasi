@@ -19,6 +19,7 @@
                                         <th>No</th>
                                         <th>Nama Anggota</th>
                                         <th>Nominal Pinjaman</th>
+                                        <th>Propisi</th>
                                         <th>Nominal Bagihasil</th>
                                         <th>Tanggal Pengajuan</th>
                                         <th>Status</th>
@@ -31,6 +32,7 @@
                                             <td>{{ $key + 1 }}</td>
                                             <td>{{ $item->user->name }}</td>
                                             <td>{{ 'Rp ' . number_format($item->nominal_pinjaman, 0, ',', '.') }}</td>
+                                            <td>{{ 'Rp ' . number_format($item->propisi ?? 0, 0, ',', '.') }}</td>
                                             <td>{{ 'Rp ' . number_format($item->nominal_bagihasil, 0, ',', '.') }}</td>
                                             <td>{{ $item->tanggal_pengajuan }}</td>
                                             <td class="text-center">
@@ -136,6 +138,17 @@
                                                                                 </div>
                                                                                 <div class="col-md-6">
                                                                                     <label
+                                                                                        class="form-label small text-primary fw-bold">Propisi</label>
+                                                                                    <div class="input-group">
+                                                                                        <input type="text"
+                                                                                            class="form-control fw-bold currency-input"
+                                                                                            name="propisi"
+                                                                                            value="{{ $item->propisi }}"
+                                                                                            placeholder="Propisi (otomatis 1%)">
+                                                                                    </div>
+                                                                                </div>
+                                                                                <div class="col-md-6">
+                                                                                    <label
                                                                                         class="form-label small text-primary fw-bold">Nominal
                                                                                         Bagihasil</label>
                                                                                     <div class="input-group">
@@ -237,6 +250,15 @@
                                                         </div>
                                                     </div>
                                                     <div class="col-md-6">
+                                                        <label
+                                                            class="form-label small text-primary fw-bold">Propisi</label>
+                                                        <div class="input-group">
+                                                            <input type="text"
+                                                                class="form-control fw-bold currency-input" name="propisi"
+                                                                placeholder="Propisi (otomatis 1%)">
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-6">
                                                         <label class="form-label small text-primary fw-bold">Nominal
                                                             Bagihasil</label>
                                                         <div class="input-group">
@@ -288,6 +310,30 @@
                     input.value = formatRupiah(this.value, 'Rp ');
                 });
             });
+
+            document.querySelectorAll('form').forEach(form => {
+                const pinjamanInput = form.querySelector('input[name="nominal_pinjaman"]');
+                const propisiInput = form.querySelector('input[name="propisi"]');
+                if (!pinjamanInput || !propisiInput) return;
+
+                let propisiManuallyEdited = (propisiInput.value || '').trim() !== '';
+                propisiInput.addEventListener('input', function() {
+                    propisiManuallyEdited = (this.value || '').trim() !== '';
+                });
+
+                const syncPropisi = () => {
+                    if (propisiManuallyEdited) return;
+                    const raw = (pinjamanInput.value || '').replace(/[^0-9]/g, '');
+                    const nominal = parseInt(raw || '0', 10) || 0;
+                    const propisi = Math.round(nominal * 0.01);
+                    propisiInput.value = propisi ? formatRupiah(String(propisi), 'Rp ') : '';
+                };
+
+                pinjamanInput.addEventListener('input', syncPropisi);
+                pinjamanInput.addEventListener('keyup', syncPropisi);
+                syncPropisi();
+            });
+
             const forms = document.querySelectorAll('form');
             forms.forEach(form => {
                 form.addEventListener('submit', function() {

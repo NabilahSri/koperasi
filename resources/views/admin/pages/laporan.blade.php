@@ -62,6 +62,8 @@
                                         <th>Jumlah Nominal Bagi Hasil</th>
                                         <th>Pengambilan Manasuka</th>
                                         <th>Pengambilan Lebaran</th>
+                                        <th>Sisa Tabungan Manasuka</th>
+                                        <th>Sisa Tabungan Lebaran</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -97,6 +99,8 @@
                                             <td>Rp. {{ number_format($bagihasil_dibayar[$item->id] ?? 0) }}</td>
                                             <td>Rp. {{ number_format($pengambilan_manasuka_total[$item->id] ?? 0) }}</td>
                                             <td>Rp. {{ number_format($pengambilan_lebaran_total[$item->id] ?? 0) }}</td>
+                                            <td>Rp. {{ number_format($sisa_manasuka_total[$item->id] ?? 0) }}</td>
+                                            <td>Rp. {{ number_format($sisa_lebaran_total[$item->id] ?? 0) }}</td>
                                         </tr>
                                     @endforeach
                                 </tbody>
