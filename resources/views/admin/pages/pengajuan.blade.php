@@ -220,16 +220,22 @@
                                                     <div class="col-12">
                                                         <label class="form-label small text-muted fw-bold">Nama
                                                             User/Anggota</label>
-                                                        <select name="id_user" id="id_user" class="form-control"
-                                                            required>
-                                                            <option value="" selected disabled>Pilih nama
-                                                                user/anggota
-                                                            </option>
-                                                            @foreach ($user as $data)
-                                                                <option value="{{ $data->id }}">{{ $data->name }}
-                                                                </option>
-                                                            @endforeach
-                                                        </select>
+                                                        <div class="position-relative">
+                                                            <input type="text" class="form-control"
+                                                                id="pengajuanUserSearch"
+                                                                placeholder="Cari nama anggota..." autocomplete="off">
+                                                            <input type="hidden" name="id_user"
+                                                                id="pengajuan_user_id_hidden" required>
+                                                            <div id="pengajuanUserDropdown"
+                                                                class="dropdown-menu w-100 mt-1"
+                                                                style="max-height: 220px; overflow-y: auto; display: none;">
+                                                                @foreach ($user as $data)
+                                                                    <button type="button" class="dropdown-item"
+                                                                        data-id="{{ $data->id }}"
+                                                                        data-name="{{ $data->name }}">{{ $data->name }}</button>
+                                                                @endforeach
+                                                            </div>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
@@ -310,6 +316,62 @@
                     input.value = formatRupiah(this.value, 'Rp ');
                 });
             });
+
+            const uInput = document.getElementById('pengajuanUserSearch');
+            const uHidden = document.getElementById('pengajuan_user_id_hidden');
+            const uDrop = document.getElementById('pengajuanUserDropdown');
+            if (uInput && uHidden && uDrop) {
+                const items = Array.from(uDrop.querySelectorAll('.dropdown-item'));
+
+                function showDrop() {
+                    uDrop.style.display = 'block';
+                }
+
+                function hideDrop() {
+                    uDrop.style.display = 'none';
+                }
+
+                function setSelection(id, name) {
+                    uHidden.value = id;
+                    uInput.value = name || '';
+                }
+
+                function filterList(q) {
+                    const s = (q || '').toLowerCase();
+                    items.forEach(it => {
+                        const n = String(it.getAttribute('data-name') || '').toLowerCase();
+                        it.style.display = s ? (n.includes(s) ? '' : 'none') : '';
+                    });
+                }
+                uInput.addEventListener('focus', function() {
+                    showDrop();
+                    filterList(this.value);
+                });
+                uInput.addEventListener('input', function() {
+                    uHidden.value = '';
+                    showDrop();
+                    filterList(this.value);
+                });
+                items.forEach(it => {
+                    it.addEventListener('click', function() {
+                        setSelection(this.getAttribute('data-id') || '', this.getAttribute(
+                            'data-name') || '');
+                        hideDrop();
+                    });
+                });
+                document.addEventListener('click', function(e) {
+                    if (!uDrop.contains(e.target) && e.target !== uInput) hideDrop();
+                });
+
+                const tambahModal = document.getElementById('tambahModal');
+                if (tambahModal) {
+                    tambahModal.addEventListener('hidden.bs.modal', function() {
+                        uHidden.value = '';
+                        uInput.value = '';
+                        hideDrop();
+                    });
+                }
+            }
 
             document.querySelectorAll('form').forEach(form => {
                 const pinjamanInput = form.querySelector('input[name="nominal_pinjaman"]');
