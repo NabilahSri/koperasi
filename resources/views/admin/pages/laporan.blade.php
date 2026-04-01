@@ -56,6 +56,7 @@
                                             @endif
                                         @endforeach
                                         <th>Nominal Pinjaman</th>
+                                        <th>Propisi</th>
                                         <th>Pinjaman Terbayar</th>
                                         <th>Sisa Pinjaman</th>
                                         <th>Nominal Bagi Hasil</th>
@@ -93,6 +94,7 @@
                                                 @endif
                                             @endforeach
                                             <td>Rp. {{ number_format($pinjaman_total[$item->id] ?? 0) }}</td>
+                                            <td>Rp. {{ number_format($propisi_total[$item->id] ?? 0) }}</td>
                                             <td>Rp. {{ number_format($pinjaman_dibayar[$item->id] ?? 0) }}</td>
                                             <td>Rp. {{ number_format($pinjaman_sisa[$item->id] ?? 0) }}</td>
                                             <td>Rp. {{ number_format($bagihasil_total[$item->id] ?? 0) }}</td>

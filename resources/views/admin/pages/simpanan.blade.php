@@ -29,11 +29,14 @@
                                         value="{{ $filter_user_id ?? '' }}">
                                     <div id="filterUserDropdown" class="dropdown-menu w-100 mt-1"
                                         style="max-height: 220px; overflow-y: auto; display: none;">
-                                        <button type="button" class="dropdown-item" data-id=""
-                                            data-name="Semua">Semua</button>
+                                        <button type="button" class="dropdown-item" data-id="" data-name="Semua"
+                                            data-alamat="" data-display="Semua">Semua</button>
                                         @foreach ($user as $u)
                                             <button type="button" class="dropdown-item" data-id="{{ $u->id }}"
-                                                data-name="{{ $u->name }}">{{ $u->name }}</button>
+                                                data-name="{{ $u->name }}" data-alamat="{{ $u->alamat ?? '' }}"
+                                                data-display="{{ $u->name }} - {{ $u->alamat ?? '-' }}">
+                                                {{ $u->name }} - {{ $u->alamat ?? '-' }}
+                                            </button>
                                         @endforeach
                                     </div>
                                 </div>
@@ -161,7 +164,11 @@
                                                         @foreach ($user as $data)
                                                             <button type="button" class="dropdown-item"
                                                                 data-id="{{ $data->id }}"
-                                                                data-name="{{ $data->name }}">{{ $data->name }}</button>
+                                                                data-name="{{ $data->name }}"
+                                                                data-alamat="{{ $data->alamat ?? '' }}"
+                                                                data-display="{{ $data->name }} - {{ $data->alamat ?? '-' }}">
+                                                                {{ $data->name }} - {{ $data->alamat ?? '-' }}
+                                                            </button>
                                                         @endforeach
                                                     </div>
                                                 </div>
@@ -263,7 +270,11 @@
                                                         @foreach ($user as $data)
                                                             <button type="button" class="dropdown-item"
                                                                 data-id="{{ $data->id }}"
-                                                                data-name="{{ $data->name }}">{{ $data->name }}</button>
+                                                                data-name="{{ $data->name }}"
+                                                                data-alamat="{{ $data->alamat ?? '' }}"
+                                                                data-display="{{ $data->name }} - {{ $data->alamat ?? '-' }}">
+                                                                {{ $data->name }} - {{ $data->alamat ?? '-' }}
+                                                            </button>
                                                         @endforeach
                                                     </div>
                                                 </div>
@@ -388,13 +399,16 @@
                 function filterList(q) {
                     const s = (q || '').toLowerCase();
                     items.forEach(it => {
-                        const n = String(it.getAttribute('data-name') || '').toLowerCase();
-                        it.style.display = s ? (n.includes(s) ? '' : 'none') : '';
+                        const name = String(it.getAttribute('data-name') || '').toLowerCase();
+                        const alamat = String(it.getAttribute('data-alamat') || '').toLowerCase();
+                        const hay = (name + ' ' + alamat).trim();
+                        it.style.display = s ? (hay.includes(s) ? '' : 'none') : '';
                     });
                 }
                 if (fHidden.value) {
                     const found = items.find(it => String(it.getAttribute('data-id')) === String(fHidden.value));
-                    if (found) fInput.value = found.getAttribute('data-name') || '';
+                    if (found) fInput.value = found.getAttribute('data-display') || found.getAttribute(
+                        'data-name') || '';
                 } else {
                     fInput.value = '';
                 }
@@ -403,13 +417,15 @@
                     filterList(this.value);
                 });
                 fInput.addEventListener('input', function() {
+                    fHidden.value = '';
                     showDrop();
                     filterList(this.value);
                 });
                 items.forEach(it => {
                     it.addEventListener('click', function() {
                         setSelection(this.getAttribute('data-id') || '', this.getAttribute(
-                            'data-name') || '');
+                                'data-display') ||
+                            this.getAttribute('data-name') || '');
                         hideDrop();
                     });
                 });
@@ -440,8 +456,10 @@
                 function filterList(q) {
                     const s = (q || '').toLowerCase();
                     items.forEach(it => {
-                        const n = String(it.getAttribute('data-name') || '').toLowerCase();
-                        it.style.display = s ? (n.includes(s) ? '' : 'none') : '';
+                        const name = String(it.getAttribute('data-name') || '').toLowerCase();
+                        const alamat = String(it.getAttribute('data-alamat') || '').toLowerCase();
+                        const hay = (name + ' ' + alamat).trim();
+                        it.style.display = s ? (hay.includes(s) ? '' : 'none') : '';
                     });
                 }
                 aInput.addEventListener('focus', function() {
@@ -449,13 +467,15 @@
                     filterList(this.value);
                 });
                 aInput.addEventListener('input', function() {
+                    aHidden.value = '';
                     showDrop();
                     filterList(this.value);
                 });
                 items.forEach(it => {
                     it.addEventListener('click', function() {
                         setSelection(this.getAttribute('data-id') || '', this.getAttribute(
-                            'data-name') || '');
+                                'data-display') ||
+                            this.getAttribute('data-name') || '');
                         hideDrop();
                     });
                 });
@@ -485,8 +505,10 @@
                 function filterList(q) {
                     const s = (q || '').toLowerCase();
                     items.forEach(it => {
-                        const n = String(it.getAttribute('data-name') || '').toLowerCase();
-                        it.style.display = s ? (n.includes(s) ? '' : 'none') : '';
+                        const name = String(it.getAttribute('data-name') || '').toLowerCase();
+                        const alamat = String(it.getAttribute('data-alamat') || '').toLowerCase();
+                        const hay = (name + ' ' + alamat).trim();
+                        it.style.display = s ? (hay.includes(s) ? '' : 'none') : '';
                     });
                 }
                 eInput.addEventListener('focus', function() {
@@ -494,13 +516,15 @@
                     filterList(this.value);
                 });
                 eInput.addEventListener('input', function() {
+                    eHidden.value = '';
                     showDrop();
                     filterList(this.value);
                 });
                 items.forEach(it => {
                     it.addEventListener('click', function() {
                         setSelection(this.getAttribute('data-id') || '', this.getAttribute(
-                            'data-name') || '');
+                                'data-display') ||
+                            this.getAttribute('data-name') || '');
                         hideDrop();
                     });
                 });
@@ -585,7 +609,16 @@
                     const eHidden2 = document.getElementById('edit_user_id_hidden');
                     const eInput2 = document.getElementById('editUserSearch');
                     if (eHidden2) eHidden2.value = idUser;
-                    if (eInput2) eInput2.value = userName;
+                    if (eInput2) {
+                        const eDrop2 = document.getElementById('editUserDropdown');
+                        const match = eDrop2 ? eDrop2.querySelector('.dropdown-item[data-id="' +
+                            idUser + '"]') : null;
+                        eInput2.value = (match && (match.getAttribute('data-display') || match
+                                .getAttribute('data-name'))) ?
+                            (match.getAttribute('data-display') || match.getAttribute(
+                            'data-name')) :
+                            userName;
+                    }
                     const namaInput = editForm.querySelector('[name="nama_penyetor"]');
                     if (namaInput) namaInput.value = namaPenyetor;
                     const tanggalInput = editForm.querySelector('[name="tanggal"]');

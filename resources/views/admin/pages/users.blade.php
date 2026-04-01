@@ -56,8 +56,7 @@
                                                     </div>
                                                 </td>
                                                 <td>
-                                                    <span
-                                                        class="badge {{ $item->role == 'admin' ? 'bg-primary' : 'bg-success' }}">
+                                                    <span>
                                                         {{ ucfirst($item->role) }}
                                                     </span>
                                                 </td>

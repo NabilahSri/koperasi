@@ -130,7 +130,13 @@
                                                     <input type="hidden" name="id_user" id="withdraw_user_id_hidden" required>
                                                     <div id="withdrawUserDropdown" class="dropdown-menu w-100 mt-1" style="max-height: 220px; overflow-y: auto; display: none;">
                                                         @foreach ($users as $data)
-                                                            <button type="button" class="dropdown-item" data-id="{{ $data->id }}" data-name="{{ $data->name }}">{{ $data->name }}</button>
+                                                            <button type="button" class="dropdown-item"
+                                                                data-id="{{ $data->id }}"
+                                                                data-name="{{ $data->name }}"
+                                                                data-alamat="{{ $data->alamat ?? '' }}"
+                                                                data-display="{{ $data->name }} - {{ $data->alamat ?? '-' }}">
+                                                                {{ $data->name }} - {{ $data->alamat ?? '-' }}
+                                                            </button>
                                                         @endforeach
                                                     </div>
                                                 </div>
@@ -206,9 +212,9 @@
                 const items = Array.from(wDrop.querySelectorAll('.dropdown-item'));
                 function showDrop() { wDrop.style.display = 'block'; }
                 function hideDrop() { wDrop.style.display = 'none'; }
-                function setSelection(id, name) { 
+                function setSelection(id, display) { 
                     wHidden.value = id; 
-                    wInput.value = name || ''; 
+                    wInput.value = display || ''; 
                     if (id) {
                         $('#id_kategori_ambil').prop('disabled', false);
                         checkSaldo();
@@ -219,15 +225,21 @@
                 function filterList(q) {
                     const s = (q || '').toLowerCase();
                     items.forEach(it => {
-                        const n = String(it.getAttribute('data-name') || '').toLowerCase();
-                        it.style.display = s ? (n.includes(s) ? '' : 'none') : '';
+                        const name = String(it.getAttribute('data-name') || '').toLowerCase();
+                        const alamat = String(it.getAttribute('data-alamat') || '').toLowerCase();
+                        const hay = (name + ' ' + alamat).trim();
+                        it.style.display = s ? (hay.includes(s) ? '' : 'none') : '';
                     });
                 }
                 wInput.addEventListener('focus', function() { showDrop(); filterList(this.value); });
-                wInput.addEventListener('input', function() { showDrop(); filterList(this.value); });
+                wInput.addEventListener('input', function() { 
+                    wHidden.value = '';
+                    showDrop(); 
+                    filterList(this.value); 
+                });
                 items.forEach(it => {
                     it.addEventListener('click', function() {
-                        setSelection(this.getAttribute('data-id') || '', this.getAttribute('data-name') || '');
+                        setSelection(this.getAttribute('data-id') || '', this.getAttribute('data-display') || '');
                         hideDrop();
                     });
                 });

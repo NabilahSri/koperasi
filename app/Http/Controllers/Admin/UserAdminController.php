@@ -15,7 +15,7 @@ class UserAdminController extends Controller
 {
     public function index(Request $request)
     {
-        $query = User::orderBy('role', 'asc');
+        $query = User::orderBy('no_use', 'asc');
 
         if ($request->has('role') && $request->role != '') {
             $query->where('role', $request->role);

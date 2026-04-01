@@ -232,7 +232,11 @@
                                                                 @foreach ($user as $data)
                                                                     <button type="button" class="dropdown-item"
                                                                         data-id="{{ $data->id }}"
-                                                                        data-name="{{ $data->name }}">{{ $data->name }}</button>
+                                                                        data-name="{{ $data->name }}"
+                                                                        data-alamat="{{ $data->alamat ?? '' }}"
+                                                                        data-display="{{ $data->name }} - {{ $data->alamat ?? '-' }}">
+                                                                        {{ $data->name }} - {{ $data->alamat ?? '-' }}
+                                                                    </button>
                                                                 @endforeach
                                                             </div>
                                                         </div>
@@ -339,8 +343,10 @@
                 function filterList(q) {
                     const s = (q || '').toLowerCase();
                     items.forEach(it => {
-                        const n = String(it.getAttribute('data-name') || '').toLowerCase();
-                        it.style.display = s ? (n.includes(s) ? '' : 'none') : '';
+                        const name = String(it.getAttribute('data-name') || '').toLowerCase();
+                        const alamat = String(it.getAttribute('data-alamat') || '').toLowerCase();
+                        const hay = (name + ' ' + alamat).trim();
+                        it.style.display = s ? (hay.includes(s) ? '' : 'none') : '';
                     });
                 }
                 uInput.addEventListener('focus', function() {
@@ -354,8 +360,11 @@
                 });
                 items.forEach(it => {
                     it.addEventListener('click', function() {
-                        setSelection(this.getAttribute('data-id') || '', this.getAttribute(
-                            'data-name') || '');
+                        setSelection(
+                            this.getAttribute('data-id') || '',
+                            this.getAttribute('data-display') || this.getAttribute(
+                            'data-name') || ''
+                        );
                         hideDrop();
                     });
                 });
