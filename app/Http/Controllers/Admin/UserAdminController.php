@@ -9,13 +9,12 @@ use App\Models\TransaksiS;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Validation\Rules\Password;
 
 class UserAdminController extends Controller
 {
     public function index(Request $request)
     {
-        $query = User::orderBy('no_use', 'asc');
+        $query = User::orderBy('no_user', 'asc');
 
         if ($request->has('role') && $request->role != '') {
             $query->where('role', $request->role);
@@ -32,6 +31,36 @@ class UserAdminController extends Controller
 
     public function create(Request $req)
     {
+        $req->validate([
+            'no_user' => 'required',
+            'name' => 'required',
+            'alamat' => 'required',
+            'role' => 'required|in:admin,anggota',
+            'email' => 'nullable|email|unique:users,email',
+            'nohp' => 'nullable',
+            'foto' => 'nullable|file|mimes:jpg,jpeg,png|max:2048',
+            'ktp' => 'nullable|file|mimes:jpg,jpeg,png|max:2048',
+        ]);
+
+        $emailInput = trim((string) $req->email);
+        $email = $emailInput !== '' ? $emailInput : null;
+        if ($email === null) {
+            $base = 'user' . preg_replace('/[^0-9]/', '', (string) $req->no_user);
+            if ($base === 'user') {
+                $base = 'user';
+            }
+            $candidate = $base . '@example.invalid';
+            $i = 1;
+            while (User::where('email', $candidate)->exists()) {
+                $candidate = $base . '-' . $i . '@example.invalid';
+                $i++;
+            }
+            $email = $candidate;
+        }
+
+        $nohpInput = trim((string) $req->nohp);
+        $nohp = $nohpInput !== '' ? $nohpInput : '-';
+
         if ($req->hasFile('foto')) {
             $photoPath = $req->file('foto')->storeAs('foto_users', $req->name . '.' . $req->file('foto')->getClientOriginalExtension());
         } else {
@@ -47,10 +76,10 @@ class UserAdminController extends Controller
         $user = User::create([
             'no_user' => $req->no_user,
             'name' => $req->name,
-            'email' => $req->email,
+            'email' => $email,
             'alamat' => $req->alamat,
-            'nohp' => $req->nohp,
-            'password' => bcrypt($req->password),
+            'nohp' => $nohp,
+            'password' => bcrypt('12341234'),
             'foto' => $photoPath,
             'ktp' => $photoKTP,
             'role' => $req->role
@@ -91,16 +120,30 @@ class UserAdminController extends Controller
     public function edit(Request $req, $id)
     {
         $user = User::find($id);
+        $req->validate([
+            'no_user' => 'required',
+            'name' => 'required',
+            'alamat' => 'required',
+            'role' => 'required|in:admin,anggota',
+            'email' => 'nullable|email|unique:users,email,' . $id,
+            'nohp' => 'nullable',
+            'foto' => 'nullable|file|mimes:jpg,jpeg,png|max:2048',
+            'ktp' => 'nullable|file|mimes:jpg,jpeg,png|max:2048',
+        ]);
+
         $userData = [
             'no_user' => $req->no_user,
             'name' => $req->name,
-            'email' => $req->email,
             'alamat' => $req->alamat,
-            'nohp' => $req->nohp,
             'role' => $req->role
         ];
-        if (!empty($req->password)) {
-            $userData['password'] = bcrypt($req->password);
+        $emailInput = trim((string) $req->email);
+        if ($emailInput !== '') {
+            $userData['email'] = $emailInput;
+        }
+        $nohpInput = trim((string) $req->nohp);
+        if ($nohpInput !== '') {
+            $userData['nohp'] = $nohpInput;
         }
 
         if ($req->hasFile('foto')) {

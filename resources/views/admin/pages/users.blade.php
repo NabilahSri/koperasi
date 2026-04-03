@@ -143,15 +143,7 @@
                                                                                     <input type="email"
                                                                                         class="form-control" name="email"
                                                                                         value="{{ $item->email }}"
-                                                                                        required>
-                                                                                </div>
-                                                                                <div class="col-md">
-                                                                                    <label
-                                                                                        class="form-label small text-muted fw-bold">Password</label>
-                                                                                    <input type="password"
-                                                                                        class="form-control"
-                                                                                        name="password"
-                                                                                        placeholder="(Kosong jika tetap)">
+                                                                                        >
                                                                                 </div>
                                                                             </div>
                                                                         </div>
@@ -175,7 +167,7 @@
                                                                                     Handphone</label>
                                                                                 <input type="number" class="form-control"
                                                                                     name="nohp"
-                                                                                    value="{{ $item->nohp }}" required>
+                                                                                    value="{{ $item->nohp }}">
                                                                             </div>
                                                                             <div class="col-12">
                                                                                 <label
@@ -282,13 +274,7 @@
                                                                 <label
                                                                     class="form-label small text-muted fw-bold">Email</label>
                                                                 <input type="email" class="form-control" name="email"
-                                                                    placeholder="email@example.com" required>
-                                                            </div>
-                                                            <div class="col-md">
-                                                                <label
-                                                                    class="form-label small text-muted fw-bold">Password</label>
-                                                                <input type="password" class="form-control"
-                                                                    name="password" required>
+                                                                    placeholder="email@example.com">
                                                             </div>
                                                         </div>
                                                     </div>
@@ -307,7 +293,7 @@
                                                             <label class="form-label small text-muted fw-bold">No
                                                                 Handphone</label>
                                                             <input type="number" class="form-control" name="nohp"
-                                                                placeholder="08123..." required>
+                                                                placeholder="08123...">
                                                         </div>
                                                         <div class="col-12">
                                                             <label
