@@ -34,7 +34,7 @@ class HistoryController extends Controller
             ->get();
 
         $query = TransaksiT::with('users')->with('kategori');
-        if (auth()->user()->role != 'admin') {
+        if (!in_array(auth()->user()->role, ['admin', 'operator'])) {
             $query->where('id_user', auth()->user()->id);
         }
         $data['tagihan'] = $query->get();

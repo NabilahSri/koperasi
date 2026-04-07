@@ -7,7 +7,7 @@
                     <div class="card-header bg-transparent border-0 p-5 pb-0">
                         <div class="d-flex justify-content-between align-items-center">
                             <h4 class="mb-0">Riwayat Transaksi Tagihan</h4>
-                            @if (auth()->user()->role == 'admin')
+                            @if (in_array(auth()->user()->role, ['admin', 'operator']))
                                 <div class="col-md-3">
                                     <select id="filter-nama" class="form-select">
                                         <option value="">Semua Anggota</option>

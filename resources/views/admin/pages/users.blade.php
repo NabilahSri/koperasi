@@ -22,6 +22,8 @@
                                         </option>
                                         <option value="anggota" {{ request('role') == 'anggota' ? 'selected' : '' }}>Anggota
                                         </option>
+                                        <option value="operator" {{ request('role') == 'operator' ? 'selected' : '' }}>Operator
+                                        </option>
                                     </select>
                                 </form>
                                 <button class="btn btn-sm btn-primary" data-bs-toggle="modal"
@@ -34,6 +36,7 @@
                                             <th>No</th>
                                             <th>Nama</th>
                                             <th>Role</th>
+                                            <th>Status</th>
                                             <th>Email</th>
                                             <th>No Hp</th>
                                             <th>Aksi</th>
@@ -59,6 +62,13 @@
                                                     <span>
                                                         {{ ucfirst($item->role) }}
                                                     </span>
+                                                </td>
+                                                <td>
+                                                    @if ($item->is_active ?? true)
+                                                        <span class="badge bg-success-subtle text-success">Aktif</span>
+                                                    @else
+                                                        <span class="badge bg-danger-subtle text-danger">Tidak Aktif</span>
+                                                    @endif
                                                 </td>
                                                 <td>{{ $item->email }}</td>
                                                 <td>{{ $item->nohp }}</td>
@@ -126,6 +136,22 @@
                                                                                         <option value="anggota"
                                                                                             {{ $item->role == 'anggota' ? 'selected' : '' }}>
                                                                                             Anggota</option>
+                                                                                        <option value="operator"
+                                                                                            {{ $item->role == 'operator' ? 'selected' : '' }}>
+                                                                                            Operator</option>
+                                                                                    </select>
+                                                                                </div>
+                                                                                <div class="col-md-12">
+                                                                                    <label
+                                                                                        class="form-label small text-muted fw-bold">Status</label>
+                                                                                    <select class="form-select"
+                                                                                        name="is_active" required>
+                                                                                        <option value="1"
+                                                                                            {{ $item->is_active ?? true ? 'selected' : '' }}>
+                                                                                            Aktif</option>
+                                                                                        <option value="0"
+                                                                                            {{ !($item->is_active ?? true) ? 'selected' : '' }}>
+                                                                                            Tidak Aktif</option>
                                                                                     </select>
                                                                                 </div>
                                                                                 <div class="col-md">
@@ -141,9 +167,9 @@
                                                                                     <label
                                                                                         class="form-label small text-muted fw-bold">Email</label>
                                                                                     <input type="email"
-                                                                                        class="form-control" name="email"
-                                                                                        value="{{ $item->email }}"
-                                                                                        >
+                                                                                        class="form-control"
+                                                                                        name="email"
+                                                                                        value="{{ $item->email }}">
                                                                                 </div>
                                                                             </div>
                                                                         </div>
@@ -262,6 +288,15 @@
                                                                 <select class="form-select" name="role" required>
                                                                     <option value="anggota" selected>Anggota</option>
                                                                     <option value="admin">Admin</option>
+                                                                    <option value="operator">Operator</option>
+                                                                </select>
+                                                            </div>
+                                                            <div class="col-md-12">
+                                                                <label
+                                                                    class="form-label small text-muted fw-bold">Status</label>
+                                                                <select class="form-select" name="is_active" required>
+                                                                    <option value="1" selected>Aktif</option>
+                                                                    <option value="0">Tidak Aktif</option>
                                                                 </select>
                                                             </div>
                                                             <div class="col-md">

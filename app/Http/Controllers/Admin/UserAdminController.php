@@ -35,7 +35,8 @@ class UserAdminController extends Controller
             'no_user' => 'required',
             'name' => 'required',
             'alamat' => 'required',
-            'role' => 'required|in:admin,anggota',
+            'role' => 'required|in:admin,anggota,operator',
+            'is_active' => 'required|in:0,1',
             'email' => 'nullable|email|unique:users,email',
             'nohp' => 'nullable',
             'foto' => 'nullable|file|mimes:jpg,jpeg,png|max:2048',
@@ -82,7 +83,8 @@ class UserAdminController extends Controller
             'password' => bcrypt('12341234'),
             'foto' => $photoPath,
             'ktp' => $photoKTP,
-            'role' => $req->role
+            'role' => $req->role,
+            'is_active' => (int) $req->is_active === 1,
         ]);
 
         if ($user) {
@@ -124,7 +126,8 @@ class UserAdminController extends Controller
             'no_user' => 'required',
             'name' => 'required',
             'alamat' => 'required',
-            'role' => 'required|in:admin,anggota',
+            'role' => 'required|in:admin,anggota,operator',
+            'is_active' => 'required|in:0,1',
             'email' => 'nullable|email|unique:users,email,' . $id,
             'nohp' => 'nullable',
             'foto' => 'nullable|file|mimes:jpg,jpeg,png|max:2048',
@@ -135,7 +138,8 @@ class UserAdminController extends Controller
             'no_user' => $req->no_user,
             'name' => $req->name,
             'alamat' => $req->alamat,
-            'role' => $req->role
+            'role' => $req->role,
+            'is_active' => (int) $req->is_active === 1,
         ];
         $emailInput = trim((string) $req->email);
         if ($emailInput !== '') {

@@ -1,4 +1,4 @@
-@if (auth()->user()->role == 'admin')
+@if (in_array(auth()->user()->role, ['admin', 'operator']))
     <div class="kleon-vertical-nav">
         <div class="logo d-flex align-items-center">
             <img src="{{ $logoPath ?? '/assets/img/logo-icon.svg' }}" alt="logo"

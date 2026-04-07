@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@if (auth()->user()->role == 'admin')
+@if (in_array(auth()->user()->role, ['admin', 'operator']))
     @section('content')
         <main class="main-wrapper">
             <div class="container-fluid">
