@@ -15,9 +15,9 @@
                 <li class="menu-section-title text-gray ff-heading fs-16 fw-bold text-uppercase mt-4 mb-2">
                     <span>PAGES</span>
                 </li>
-                <li class="menu-item {{ request()->is('users*') ? 'active' : '' }}"><a
-                        href="{{ url('users') }}"> <span class="nav-icon flex-shrink-0"><i
-                                class="bi bi-people fs-18"></i></span> <span class="nav-text">Users</span></a>
+                <li class="menu-item {{ request()->is('users*') ? 'active' : '' }}"><a href="{{ url('users') }}"> <span
+                            class="nav-icon flex-shrink-0"><i class="bi bi-people fs-18"></i></span> <span
+                            class="nav-text">Users</span></a>
                 </li>
                 <li class="menu-item {{ request()->is('tunggakan') ? 'active' : '' }}"><a
                         href="{{ url('tunggakan') }}"><span class="nav-icon flex-shrink-0"><i
@@ -48,6 +48,10 @@
                                 href="{{ url('histori/tagihan') }}"> Riwayat </a></li>
                     </ul>
                     <span class='submenu-opener'><i class='bi bi-chevron-right'></i></span>
+                </li>
+                <li class="menu-item {{ request()->is('bantuan*') ? 'active' : '' }}"><a
+                        href="{{ url('bantuan') }}"><span class="nav-icon flex-shrink-0"><i
+                                class="bi bi-box2-heart fs-18"></i></span> <span class="nav-text">Bantuan</span></a>
                 </li>
                 <li class="menu-item {{ request()->is('laporan') ? 'active' : '' }}"><a
                         href="{{ url('laporan') }}"><span class="nav-icon flex-shrink-0"><i

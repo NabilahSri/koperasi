@@ -13,6 +13,7 @@ use App\Http\Controllers\Admin\PengaturanController;
 use App\Http\Controllers\Admin\LaporanController;
 use App\Http\Controllers\Admin\ActivityLogController;
 use App\Http\Controllers\Admin\PengambilanSimpananController;
+use App\Http\Controllers\Admin\BantuanController;
 
 Route::get('/dashboard', [DashboardController::class, 'index']);
 
@@ -62,3 +63,6 @@ Route::get('/pengambilan', [PengambilanSimpananController::class, 'index'])->nam
 Route::get('/pengambilan/create', [PengambilanSimpananController::class, 'create'])->name('pengambilan.create');
 Route::post('/pengambilan/store', [PengambilanSimpananController::class, 'store'])->name('pengambilan.store');
 Route::get('/pengambilan/getSaldo/{userId}/{kategoriId}', [PengambilanSimpananController::class, 'getSaldo']);
+
+Route::get('/bantuan', [BantuanController::class, 'index']);
+Route::post('/bantuan/create', [BantuanController::class, 'create']);

@@ -363,7 +363,7 @@
                         setSelection(
                             this.getAttribute('data-id') || '',
                             this.getAttribute('data-display') || this.getAttribute(
-                            'data-name') || ''
+                                'data-name') || ''
                         );
                         hideDrop();
                     });
