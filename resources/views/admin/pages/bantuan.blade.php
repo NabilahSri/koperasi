@@ -92,16 +92,6 @@
                             <div class="card-header bg-transparent border-0 p-4 pb-0">
                                 <div class="d-flex align-items-center justify-content-between gap-3 flex-wrap">
                                     <h4 class="mb-0 fw-bold">Rekap Bantuan</h4>
-                                    <div class="d-flex align-items-center gap-2">
-                                        <label class="small text-muted mb-0">Filter Bantuan</label>
-                                        <select id="filterRekapBantuan" class="form-select form-select-sm"
-                                            style="min-width: 220px;">
-                                            <option value="">Semua</option>
-                                            @foreach ($bantuanNames as $name)
-                                                <option value="{{ $name }}">{{ $name }}</option>
-                                            @endforeach
-                                        </select>
-                                    </div>
                                 </div>
                             </div>
                             <div class="card-body p-4">
