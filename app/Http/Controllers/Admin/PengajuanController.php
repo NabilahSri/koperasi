@@ -11,15 +11,17 @@ class PengajuanController extends Controller
 {
     public function index()
     {
-        $data['user'] = User::all();
-        $data['pengajuan'] = Pengajuan::with('user')->get();
+        $data['user'] = User::where('role', 'anggota')->active()->get();
+        $data['pengajuan'] = Pengajuan::with('user')
+            ->whereHas('user', fn ($q) => $q->active())
+            ->get();
         return view('admin.pages.pengajuan', $data);
     }
 
     public function create(Request $req)
     {
         $req->validate([
-            'id_user' => 'required',
+            'id_user' => 'required|exists:users,id,is_active,1',
             'nominal_pinjaman' => 'required',
             'propisi' => 'nullable',
             'nominal_bagihasil' => 'required',
@@ -45,7 +47,7 @@ class PengajuanController extends Controller
     public function edit(Request $req)
     {
         $req->validate([
-            'id_user' => 'required',
+            'id_user' => 'required|exists:users,id,is_active,1',
             'nominal_pinjaman' => 'required',
             'propisi' => 'nullable',
             'nominal_bagihasil' => 'required',

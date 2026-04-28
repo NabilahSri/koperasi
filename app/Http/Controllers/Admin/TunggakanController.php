@@ -16,7 +16,7 @@ class TunggakanController extends Controller
 {
     public function index()
     {
-        $anggota = User::orderBy('no_user', 'desc')->get();
+        $anggota = User::where('role', 'anggota')->active()->orderBy('no_user', 'desc')->get();
 
         $pengaturan = Lembaga::first();
         $tenggatIuran = $pengaturan ? ($pengaturan->tenggat_iuran_wajib ?? 1) : 1;

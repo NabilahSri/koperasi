@@ -13,7 +13,9 @@ class ActivityLogController extends Controller
 {
     public function index(Request $request)
     {
-        $query = ActivityLog::with('user')->orderBy('created_at', 'desc');
+        $query = ActivityLog::with('user')
+            ->whereHas('user', fn ($q) => $q->active())
+            ->orderBy('created_at', 'desc');
 
         if ($request->filled('user_id')) {
             $query->where('user_id', $request->integer('user_id'));
@@ -24,13 +26,14 @@ class ActivityLogController extends Controller
 
         $logs = $query->limit(2000)->get();
 
-        $users = User::orderBy('name')->get(['id', 'name']);
+        $users = User::active()->orderBy('name')->get(['id', 'name']);
 
-        $todayCount = ActivityLog::whereDate('created_at', today())->count();
-        $monthCount = ActivityLog::whereMonth('created_at', now()->month)->whereYear('created_at', now()->year)->count();
+        $todayCount = ActivityLog::whereHas('user', fn ($q) => $q->active())->whereDate('created_at', today())->count();
+        $monthCount = ActivityLog::whereHas('user', fn ($q) => $q->active())->whereMonth('created_at', now()->month)->whereYear('created_at', now()->year)->count();
         $topUser = ActivityLog::select('user_id')
             ->selectRaw('count(*) as total')
             ->whereMonth('created_at', now()->month)
+            ->whereHas('user', fn ($q) => $q->active())
             ->groupBy('user_id')
             ->orderByDesc('total')
             ->with('user:id,name')
@@ -39,7 +42,7 @@ class ActivityLogController extends Controller
         $chartData = [];
         for ($i = 6; $i >= 0; $i--) {
             $date = now()->subDays($i)->format('Y-m-d');
-            $count = ActivityLog::whereDate('created_at', $date)->count();
+            $count = ActivityLog::whereHas('user', fn ($q) => $q->active())->whereDate('created_at', $date)->count();
             $chartData['categories'][] = now()->subDays($i)->locale('id')->isoFormat('dddd');
             $chartData['data'][] = $count;
         }
@@ -63,7 +66,9 @@ class ActivityLogController extends Controller
 
     public function export(Request $request)
     {
-        $query = ActivityLog::with('user')->orderBy('created_at', 'desc');
+        $query = ActivityLog::with('user')
+            ->whereHas('user', fn ($q) => $q->active())
+            ->orderBy('created_at', 'desc');
 
         if ($request->filled('user_id')) {
             $query->where('user_id', $request->integer('user_id'));

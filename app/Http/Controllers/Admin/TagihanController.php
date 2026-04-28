@@ -14,17 +14,25 @@ class TagihanController extends Controller
 {
     public function index()
     {
-        $data['pengajuan'] = Pengajuan::with('user')->where('keterangan', 'belum lunas')->get();
+        $data['pengajuan'] = Pengajuan::with('user')
+            ->where('keterangan', 'belum lunas')
+            ->whereHas('user', fn ($q) => $q->active())
+            ->get();
         $data['kategori'] = Jenis::select('jenis.*', 'kategori.*')
             ->join('kategori', 'jenis.id', '=', 'kategori.id_jenis')
             ->where('jenis.nama', '=', 'Tagihan')->get();
-        $data['tagihan'] = TransaksiT::with('pengajuan')->get();
+        $data['tagihan'] = TransaksiT::with(['pengajuan', 'users'])
+            ->whereHas('users', fn ($q) => $q->active())
+            ->get();
         return view('admin.pages.tagihan', $data);
     }
 
     public function create(Request $request, $id)
     {
-        $validasi = Pengajuan::where('id', $id)->first();
+        $validasi = Pengajuan::with('user')->where('id', $id)->first();
+        if (!$validasi || !$validasi->user || !$validasi->user->is_active) {
+            return redirect('/tagihan/bayar')->with('error', 'User tidak aktif.');
+        }
 
         if ($request->has('transaksi')) {
             foreach ($request->transaksi as $item) {

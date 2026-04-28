@@ -39,14 +39,18 @@ class DashboardController extends Controller
         $data['total_iuran_pokok'] = $kategoriPokok ? TransaksiS::where('id_kategori', $kategoriPokok->id)->where('id_user',  auth()->user()->id)->sum('jumlah') : 0;
         $data['total_iuran_wajib'] = $kategoriWajib ? TransaksiS::where('id_kategori', $kategoriWajib->id)->where('id_user',  auth()->user()->id)->sum('jumlah') : 0;
 
-        $data['total_admin'] = User::where('role', 'admin')->count();
-        $data['total_anggota'] = User::where('role', 'anggota')->count();
+        $data['total_admin'] = User::where('role', 'admin')->active()->count();
+        $data['total_anggota'] = User::where('role', 'anggota')->active()->count();
 
-        $data['total_semua_simpanan'] = TransaksiS::sum('jumlah');
-        $data['total_semua_tagihan'] = Pengajuan::sum('nominal_pinjaman') + Pengajuan::sum('nominal_bagihasil');
+        $data['total_semua_simpanan'] = TransaksiS::whereHas('user', fn ($q) => $q->active())->sum('jumlah');
+        $data['total_semua_tagihan'] = Pengajuan::whereHas('user', fn ($q) => $q->active())->sum('nominal_pinjaman')
+            + Pengajuan::whereHas('user', fn ($q) => $q->active())->sum('nominal_bagihasil');
 
         $tanggal = Carbon::now();
-        $data['simpanan_masuk'] = TransaksiS::where('tanggal', $tanggal)->with('users')->get();
+        $data['simpanan_masuk'] = TransaksiS::where('tanggal', $tanggal)
+            ->with('user')
+            ->whereHas('user', fn ($q) => $q->active())
+            ->get();
 
         $monthly = [];
         for ($i = 5; $i >= 0; $i--) {
@@ -54,9 +58,9 @@ class DashboardController extends Controller
             $y = $d->year;
             $m = $d->month;
             $label = $d->locale('id')->isoFormat('MMM YYYY');
-            $simp = TransaksiS::whereYear('tanggal', $y)->whereMonth('tanggal', $m)->sum('jumlah');
-            $tag = TransaksiT::whereYear('tanggal', $y)->whereMonth('tanggal', $m)->sum('jumlah');
-            $ambil = PengambilanSimpanan::whereYear('tanggal', $y)->whereMonth('tanggal', $m)->sum('jumlah');
+            $simp = TransaksiS::whereYear('tanggal', $y)->whereMonth('tanggal', $m)->whereHas('user', fn ($q) => $q->active())->sum('jumlah');
+            $tag = TransaksiT::whereYear('tanggal', $y)->whereMonth('tanggal', $m)->whereHas('users', fn ($q) => $q->active())->sum('jumlah');
+            $ambil = PengambilanSimpanan::whereYear('tanggal', $y)->whereMonth('tanggal', $m)->whereHas('user', fn ($q) => $q->active())->sum('jumlah');
             $monthly[] = [
                 'label' => $label,
                 'simpanan' => $simp,

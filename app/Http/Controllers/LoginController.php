@@ -67,6 +67,7 @@ class LoginController extends Controller
     public function auth(Request $request)
     {
         $credential = $request->only('no_user', 'password');
+        $credential['is_active'] = 1;
         if (Auth::attempt($credential)) {
             return redirect('/dashboard');
         } else {

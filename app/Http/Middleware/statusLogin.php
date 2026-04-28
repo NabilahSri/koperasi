@@ -17,6 +17,10 @@ class statusLogin
     public function handle(Request $request, Closure $next): Response
     {
         if (Auth::check()) {
+            if (!Auth::user()->is_active) {
+                Auth::logout();
+                return redirect('/')->with('error', 'Akun tidak aktif.');
+            }
             return $next($request);
         }else {
             return redirect('/');

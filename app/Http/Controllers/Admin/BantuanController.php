@@ -17,7 +17,7 @@ class BantuanController extends Controller
             abort(403);
         }
 
-        $data['anggota'] = User::where('role', 'anggota')->orderBy('name')->get();
+        $data['anggota'] = User::where('role', 'anggota')->active()->orderBy('name')->get();
         $data['bantuanNames'] = Bantuan::query()
             ->select('nama_bantuan')
             ->distinct()
@@ -25,6 +25,7 @@ class BantuanController extends Controller
             ->pluck('nama_bantuan');
 
         $data['riwayat'] = Bantuan::with(['user', 'petugas'])
+            ->whereHas('user', fn ($q) => $q->active())
             ->orderBy('tanggal', 'desc')
             ->orderBy('id', 'desc')
             ->get();
@@ -45,8 +46,10 @@ class BantuanController extends Controller
             ->values();
 
         $data['rekap'] = DB::table('bantuan')
-            ->select('id_user', 'nama_bantuan', DB::raw('SUM(jumlah) AS total_jumlah'))
-            ->groupBy('id_user', 'nama_bantuan')
+            ->join('users', 'bantuan.id_user', '=', 'users.id')
+            ->where('users.is_active', 1)
+            ->select('bantuan.id_user', 'bantuan.nama_bantuan', DB::raw('SUM(bantuan.jumlah) AS total_jumlah'))
+            ->groupBy('bantuan.id_user', 'bantuan.nama_bantuan')
             ->orderBy('nama_bantuan')
             ->get();
 
@@ -65,7 +68,7 @@ class BantuanController extends Controller
         }
 
         $validated = $request->validate([
-            'id_user' => 'required|exists:users,id',
+            'id_user' => 'required|exists:users,id,is_active,1',
             'nama_bantuan' => 'required|string|max:255',
             'jumlah' => 'required',
             'tanggal' => 'required|date',

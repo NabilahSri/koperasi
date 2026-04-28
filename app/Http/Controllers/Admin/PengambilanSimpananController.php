@@ -16,23 +16,24 @@ class PengambilanSimpananController extends Controller
     public function index()
     {
         $withdrawals = PengambilanSimpanan::with(['user', 'kategori', 'petugas'])
+            ->whereHas('user', fn($q) => $q->active())
             ->orderBy('created_at', 'desc')
             ->get();
 
-        $totalPengambilan = PengambilanSimpanan::sum('jumlah');
-        $pengambilanHariIni = PengambilanSimpanan::whereDate('tanggal', now())->sum('jumlah');
-        $pengambilanBulanIni = PengambilanSimpanan::whereMonth('tanggal', now()->month)
+        $totalPengambilan = PengambilanSimpanan::whereHas('user', fn($q) => $q->active())->sum('jumlah');
+        $pengambilanHariIni = PengambilanSimpanan::whereHas('user', fn($q) => $q->active())->whereDate('tanggal', now())->sum('jumlah');
+        $pengambilanBulanIni = PengambilanSimpanan::whereHas('user', fn($q) => $q->active())->whereMonth('tanggal', now()->month)
             ->whereYear('tanggal', now()->year)
             ->sum('jumlah');
 
-        $users = User::all();
+        $users = User::active()->get();
 
         return view('admin.pages.pengambilan.index', compact('withdrawals', 'totalPengambilan', 'pengambilanHariIni', 'pengambilanBulanIni', 'users'));
     }
 
     public function create()
     {
-        $users = User::where('role', 'anggota')->get();
+        $users = User::where('role', 'anggota')->active()->get();
         $kategoris = Kategori::whereIn('nama', ['Manasuka', 'Lebaran', 'Simpanan Manasuka', 'Simpanan Lebaran'])->get();
 
         return view('admin.pages.pengambilan.create', compact('users', 'kategoris'));
@@ -40,6 +41,11 @@ class PengambilanSimpananController extends Controller
 
     public function getSaldo($userId, $kategoriId)
     {
+        $isActive = User::whereKey($userId)->active()->exists();
+        if (!$isActive) {
+            return response()->json(['message' => 'User tidak aktif.'], 404);
+        }
+
         $masuk = TransaksiS::where('id_user', $userId)
             ->where('id_kategori', $kategoriId)
             ->sum('jumlah');
@@ -54,7 +60,7 @@ class PengambilanSimpananController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'id_user' => 'required|exists:users,id',
+            'id_user' => 'required|exists:users,id,is_active,1',
             'id_kategori' => 'required|exists:kategori,id',
             'jumlah' => 'required',
             'tanggal' => 'required|date',
@@ -80,7 +86,7 @@ class PengambilanSimpananController extends Controller
 
         DB::beginTransaction();
         try {
-            $user = User::find($request->id_user);
+            $user = User::active()->findOrFail($request->id_user);
 
             PengambilanSimpanan::create([
                 'id_user' => $request->id_user,

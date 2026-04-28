@@ -13,13 +13,15 @@ class SimpananController extends Controller
 {
     public function index(Request $request)
     {
-        $data['user'] = User::all();
+        $data['user'] = User::active()->get();
         $data['kategori'] = Jenis::select('jenis.*', 'kategori.*')
             ->join('kategori', 'jenis.id', '=', 'kategori.id_jenis')
             ->where('jenis.nama', '=', 'Simpanan')
             ->where('kategori.nama', '!=', 'Iuran Pokok')
             ->get();
-        $query = TransaksiS::with('user')->with('kategori')->with('petugas')->orderBy('created_at', 'desc');
+        $query = TransaksiS::with('user')->with('kategori')->with('petugas')
+            ->whereHas('user', fn ($q) => $q->active())
+            ->orderBy('created_at', 'desc');
         if ($request->filled('filter_user_id')) {
             $query->where('id_user', $request->filter_user_id);
         }
@@ -40,7 +42,7 @@ class SimpananController extends Controller
     {
         $id_petugas = auth()->user()->id;
         $req->validate([
-            'id_user' => 'required',
+            'id_user' => 'required|exists:users,id,is_active,1',
             'nama_penyetor' => 'required',
             'tanggal' => 'required',
             'keterangan' => 'required',
@@ -75,7 +77,7 @@ class SimpananController extends Controller
     {
         $id_petugas = auth()->user()->id;
         $req->validate([
-            'id_user' => 'required',
+            'id_user' => 'required|exists:users,id,is_active,1',
             'id_kategori' => 'required',
             'nama_penyetor' => 'required',
             'jumlah' => 'required',
@@ -103,7 +105,7 @@ class SimpananController extends Controller
 
     public function getJumlah($id_user, $id_kat)
     {
-        $users = User::where('id', $id_user)->first();
+        $users = User::active()->where('id', $id_user)->first();
         return response()->json($users);
     }
 }

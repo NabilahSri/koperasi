@@ -21,15 +21,20 @@ class LaporanController extends Controller
     public function index()
     {
         $data['kategori'] = Kategori::orderBy('id_jenis')->get();
-        $data['user'] = User::where('role', 'anggota')->get();
+        $data['user'] = User::where('role', 'anggota')->active()->get();
+        $activeUserIds = $data['user']->pluck('id')->all();
         $data['simpanan'] = [];
         $data['tagihan'] = [];
 
         $simpanan = TransaksiS::select('id_user', 'id_kategori', DB::raw('SUM(jumlah) AS jumlah'))->groupBy('id_user', 'id_kategori')
+            ->whereIn('id_user', $activeUserIds)
             ->get();
         $pengambilan = PengambilanSimpanan::select('id_user', 'id_kategori', DB::raw('SUM(jumlah) AS jumlah'))
+            ->whereIn('id_user', $activeUserIds)
             ->groupBy('id_user', 'id_kategori')->get();
-        $tagihan = TransaksiT::select('id_user', 'id_kategori', DB::raw('SUM(jumlah) AS jumlah'))->groupBy('id_user', 'id_kategori')->get();
+        $tagihan = TransaksiT::select('id_user', 'id_kategori', DB::raw('SUM(jumlah) AS jumlah'))
+            ->whereIn('id_user', $activeUserIds)
+            ->groupBy('id_user', 'id_kategori')->get();
         $data['pengambilan'] = [];
         $data['pengambilan_total'] = [];
         $data['pengambilan_manasuka_total'] = [];
@@ -84,22 +89,26 @@ class LaporanController extends Controller
 
         // Hitung pinjaman total, dibayar, sisa (semua waktu)
         $pinjamanTotal = \App\Models\Pengajuan::select('id_user', DB::raw('SUM(nominal_pinjaman) AS total'))
+            ->whereIn('id_user', $activeUserIds)
             ->groupBy('id_user')->get();
         foreach ($pinjamanTotal as $pt) {
             $data['pinjaman_total'][$pt->id_user] = $pt->total;
         }
         $propisiTotal = \App\Models\Pengajuan::select('id_user', DB::raw('SUM(COALESCE(propisi, 0)) AS total'))
+            ->whereIn('id_user', $activeUserIds)
             ->groupBy('id_user')->get();
         foreach ($propisiTotal as $pr) {
             $data['propisi_total'][$pr->id_user] = $pr->total;
         }
-        $dibayarQuery = TransaksiT::select('id_user', DB::raw('SUM(jumlah) AS total'))->groupBy('id_user');
+        $dibayarQuery = TransaksiT::select('id_user', DB::raw('SUM(jumlah) AS total'))
+            ->whereIn('id_user', $activeUserIds)
+            ->groupBy('id_user');
         if ($pinjamanKategori) $dibayarQuery->where('id_kategori', $pinjamanKategori->id);
         $dibayarList = $dibayarQuery->get();
         foreach ($dibayarList as $dp) {
             $data['pinjaman_dibayar'][$dp->id_user] = $dp->total;
         }
-        foreach (User::all() as $u) {
+        foreach ($data['user'] as $u) {
             $t = $data['pinjaman_total'][$u->id] ?? 0;
             $d = $data['pinjaman_dibayar'][$u->id] ?? 0;
             $data['pinjaman_sisa'][$u->id] = max($t - $d, 0);
@@ -107,11 +116,14 @@ class LaporanController extends Controller
 
         // Bagi hasil total (all time) dan dibayar (all time)
         $bagihasilTotal = \App\Models\Pengajuan::select('id_user', DB::raw('SUM(nominal_bagihasil) AS total'))
+            ->whereIn('id_user', $activeUserIds)
             ->groupBy('id_user')->get();
         foreach ($bagihasilTotal as $bh) {
             $data['bagihasil_total'][$bh->id_user] = $bh->total;
         }
-        $bagihasilDibayarQuery = TransaksiT::select('id_user', DB::raw('SUM(jumlah) AS total'))->groupBy('id_user');
+        $bagihasilDibayarQuery = TransaksiT::select('id_user', DB::raw('SUM(jumlah) AS total'))
+            ->whereIn('id_user', $activeUserIds)
+            ->groupBy('id_user');
         if ($bagihasilKategori) {
             $bagihasilDibayarQuery->where('id_kategori', $bagihasilKategori->id);
         }
@@ -126,6 +138,7 @@ class LaporanController extends Controller
     public function filterData(Request $request)
     {
         $data['kategori'] = Kategori::orderBy('id_jenis')->get();
+        $activeUserIds = User::where('role', 'anggota')->active()->pluck('id')->all();
 
         $selectedMonth = $request->input('filter_month');
         Session::put('filtered_month', $selectedMonth);
@@ -133,18 +146,21 @@ class LaporanController extends Controller
         $formattedYear = Carbon::parse($selectedMonth)->format('Y');
 
         $simpanan = TransaksiS::select('id_user', 'id_kategori', DB::raw('SUM(jumlah) AS jumlah'))
+            ->whereIn('id_user', $activeUserIds)
             ->whereMonth('tanggal', '=', $formattedMonth)
             ->whereYear('tanggal', '=', $formattedYear)
             ->groupBy('id_user', 'id_kategori')
             ->get();
 
         $pengambilan = PengambilanSimpanan::select('id_user', 'id_kategori', DB::raw('SUM(jumlah) AS jumlah'))
+            ->whereIn('id_user', $activeUserIds)
             ->whereMonth('tanggal', '=', $formattedMonth)
             ->whereYear('tanggal', '=', $formattedYear)
             ->groupBy('id_user', 'id_kategori')
             ->get();
 
         $tagihan = TransaksiT::select('id_user', 'id_kategori', DB::raw('SUM(jumlah) AS jumlah'))
+            ->whereIn('id_user', $activeUserIds)
             ->whereMonth('tanggal', '=', $formattedMonth)
             ->whereYear('tanggal', '=', $formattedYear)
             ->groupBy('id_user', 'id_kategori')
@@ -157,7 +173,7 @@ class LaporanController extends Controller
         );
         $userIds = array_unique($userIds);
 
-        $data['user'] = User::where('role', 'anggota')->whereIn('id', $userIds)->get();
+        $data['user'] = User::where('role', 'anggota')->active()->whereIn('id', $userIds)->get();
 
         $data['simpanan'] = [];
         $data['tagihan'] = [];
@@ -216,16 +232,19 @@ class LaporanController extends Controller
 
         // Pinjaman total (semua waktu), dibayar (sesuai filter bulan), sisa
         $pinjamanTotal = \App\Models\Pengajuan::select('id_user', DB::raw('SUM(nominal_pinjaman) AS total'))
+            ->whereIn('id_user', $activeUserIds)
             ->groupBy('id_user')->get();
         foreach ($pinjamanTotal as $pt) {
             $data['pinjaman_total'][$pt->id_user] = $pt->total;
         }
         $propisiTotal = \App\Models\Pengajuan::select('id_user', DB::raw('SUM(COALESCE(propisi, 0)) AS total'))
+            ->whereIn('id_user', $activeUserIds)
             ->groupBy('id_user')->get();
         foreach ($propisiTotal as $pr) {
             $data['propisi_total'][$pr->id_user] = $pr->total;
         }
         $dibayarQuery = TransaksiT::select('id_user', DB::raw('SUM(jumlah) AS total'))
+            ->whereIn('id_user', $activeUserIds)
             ->whereMonth('tanggal', '=', $formattedMonth)
             ->whereYear('tanggal', '=', $formattedYear)
             ->groupBy('id_user');
@@ -242,11 +261,13 @@ class LaporanController extends Controller
 
         // Bagi hasil total (all time), dibayar (filtered by month)
         $bagihasilTotal = \App\Models\Pengajuan::select('id_user', DB::raw('SUM(nominal_bagihasil) AS total'))
+            ->whereIn('id_user', $activeUserIds)
             ->groupBy('id_user')->get();
         foreach ($bagihasilTotal as $bh) {
             $data['bagihasil_total'][$bh->id_user] = $bh->total;
         }
         $bagihasilDibayarQuery = TransaksiT::select('id_user', DB::raw('SUM(jumlah) AS total'))
+            ->whereIn('id_user', $activeUserIds)
             ->whereMonth('tanggal', '=', $formattedMonth)
             ->whereYear('tanggal', '=', $formattedYear)
             ->groupBy('id_user');
@@ -261,18 +282,22 @@ class LaporanController extends Controller
 
     public function export()
     {
-        $users = User::where('role', 'anggota')->get();
+        $users = User::where('role', 'anggota')->active()->get();
+        $activeUserIds = $users->pluck('id')->all();
         $kategoriList = Kategori::with('jenis')->orderBy('id_jenis')->get();
 
         $simpananData = TransaksiS::select('id_user', 'id_kategori', DB::raw('SUM(jumlah) AS jumlah'))
+            ->whereIn('id_user', $activeUserIds)
             ->groupBy('id_user', 'id_kategori')
             ->get();
 
         $tagihanData = TransaksiT::select('id_user', 'id_kategori', DB::raw('SUM(jumlah) AS jumlah'))
+            ->whereIn('id_user', $activeUserIds)
             ->groupBy('id_user', 'id_kategori')
             ->get();
 
         $pengambilanData = PengambilanSimpanan::select('id_user', 'id_kategori', DB::raw('SUM(jumlah) AS jumlah'))
+            ->whereIn('id_user', $activeUserIds)
             ->groupBy('id_user', 'id_kategori')
             ->get();
 
@@ -329,23 +354,26 @@ class LaporanController extends Controller
 
         // Pinjaman totals (all time) and dibayar (all time) for export
         $pinjamanTotal = \App\Models\Pengajuan::select('id_user', DB::raw('SUM(nominal_pinjaman) AS total'))
+            ->whereIn('id_user', $activeUserIds)
             ->groupBy('id_user')->get()->keyBy('id_user');
         $propisiTotal = \App\Models\Pengajuan::select('id_user', DB::raw('SUM(COALESCE(propisi, 0)) AS total'))
+            ->whereIn('id_user', $activeUserIds)
             ->groupBy('id_user')->get()->keyBy('id_user');
         $pinjamanDibayarQuery = TransaksiT::select('id_user', DB::raw('SUM(jumlah) AS total'));
         if ($pinjamanKategori) {
             $pinjamanDibayarQuery->where('id_kategori', $pinjamanKategori->id);
         }
-        $pinjamanDibayar = $pinjamanDibayarQuery->groupBy('id_user')->get()->keyBy('id_user');
+        $pinjamanDibayar = $pinjamanDibayarQuery->whereIn('id_user', $activeUserIds)->groupBy('id_user')->get()->keyBy('id_user');
 
         // Bagihasil totals (all time) and dibayar (all time)
         $bagihasilTotal = \App\Models\Pengajuan::select('id_user', DB::raw('SUM(nominal_bagihasil) AS total'))
+            ->whereIn('id_user', $activeUserIds)
             ->groupBy('id_user')->get()->keyBy('id_user');
         $bagihasilDibayarQuery = TransaksiT::select('id_user', DB::raw('SUM(jumlah) AS total'));
         if ($bagihasilKategori) {
             $bagihasilDibayarQuery->where('id_kategori', $bagihasilKategori->id);
         }
-        $bagihasilDibayar = $bagihasilDibayarQuery->groupBy('id_user')->get()->keyBy('id_user');
+        $bagihasilDibayar = $bagihasilDibayarQuery->whereIn('id_user', $activeUserIds)->groupBy('id_user')->get()->keyBy('id_user');
 
         foreach ($users as $key => $user) {
             $rowData = [
@@ -445,22 +473,26 @@ class LaporanController extends Controller
         $formattedMonth2 = Carbon::parse($selectedMonth)->locale('id')->isoFormat('MMMM YYYY');
 
         $kategoriList = Kategori::with('jenis')->orderBy('id_jenis')->get();
+        $activeUserIds = User::where('role', 'anggota')->active()->pluck('id')->all();
 
         $userIdsWithTransactions = [];
 
         $simpananData = TransaksiS::select('id_user', 'id_kategori', DB::raw('SUM(jumlah) AS jumlah'))
+            ->whereIn('id_user', $activeUserIds)
             ->whereMonth('tanggal', $formattedMonth)
             ->whereYear('tanggal', $formattedYear)
             ->groupBy('id_user', 'id_kategori')
             ->get();
 
         $tagihanData = TransaksiT::select('id_user', 'id_kategori', DB::raw('SUM(jumlah) AS jumlah'))
+            ->whereIn('id_user', $activeUserIds)
             ->whereMonth('tanggal', $formattedMonth)
             ->whereYear('tanggal', $formattedYear)
             ->groupBy('id_user', 'id_kategori')
             ->get();
 
         $pengambilanData = PengambilanSimpanan::select('id_user', 'id_kategori', DB::raw('SUM(jumlah) AS jumlah'))
+            ->whereIn('id_user', $activeUserIds)
             ->whereMonth('tanggal', $formattedMonth)
             ->whereYear('tanggal', $formattedYear)
             ->groupBy('id_user', 'id_kategori')
@@ -473,7 +505,7 @@ class LaporanController extends Controller
         );
         $userIdsWithTransactions = array_unique($userIdsWithTransactions);
 
-        $users = User::where('role', 'anggota')->whereIn('id', $userIdsWithTransactions)->get();
+        $users = User::where('role', 'anggota')->active()->whereIn('id', $userIdsWithTransactions)->get();
 
         $lookup = [];
         foreach ($simpananData as $s) {
@@ -530,10 +562,13 @@ class LaporanController extends Controller
 
         // Pinjaman total (all time), dibayar (filtered by month), sisa
         $pinjamanTotal = \App\Models\Pengajuan::select('id_user', DB::raw('SUM(nominal_pinjaman) AS total'))
+            ->whereIn('id_user', $activeUserIds)
             ->groupBy('id_user')->get()->keyBy('id_user');
         $propisiTotal = \App\Models\Pengajuan::select('id_user', DB::raw('SUM(COALESCE(propisi, 0)) AS total'))
+            ->whereIn('id_user', $activeUserIds)
             ->groupBy('id_user')->get()->keyBy('id_user');
         $pinjamanDibayarQuery = TransaksiT::select('id_user', DB::raw('SUM(jumlah) AS total'))
+            ->whereIn('id_user', $activeUserIds)
             ->whereMonth('tanggal', $formattedMonth)
             ->whereYear('tanggal', $formattedYear);
         if ($pinjamanKategori) {
@@ -543,9 +578,10 @@ class LaporanController extends Controller
 
         // Bagihasil total (all time) dan dibayar (sesuai filter bulan)
         $bagihasilTotal = \App\Models\Pengajuan::select('id_user', DB::raw('SUM(nominal_bagihasil) AS total'))
+            ->whereIn('id_user', $activeUserIds)
             ->groupBy('id_user')->get()->keyBy('id_user');
-        $bagihasilDibayarQuery = TransaksiT::where('id_kategori', $bagihasilKategori->id)
-            ->select('id_user', DB::raw('SUM(jumlah) AS total'))
+        $bagihasilDibayarQuery = TransaksiT::select('id_user', DB::raw('SUM(jumlah) AS total'))
+            ->whereIn('id_user', $activeUserIds)
             ->whereMonth('tanggal', $formattedMonth)
             ->whereYear('tanggal', $formattedYear);
         if ($bagihasilKategori) {
