@@ -20,8 +20,8 @@
                                                     class="form-control">
                                             </div>
                                             <div class="col-auto">
-                                                <button type="submit" class="btn btn-sm btn-icon btn-warning text-white"><i
-                                                        class="bi bi-funnel fs-18"></i></button>
+                                                <button type="submit" class="btn btn-sm btn-icon btn-warning text-white">
+                                                    <i class="bi bi-funnel fs-18"></i></button>
                                             </div>
                                         </div>
                                     </form>

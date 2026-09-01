@@ -342,24 +342,16 @@
                                                             class="bi bi-cash-coin me-2"></i>Informasi Keuangan</h6>
                                                     <div class="p-3 bg-primary-subtle  border-primary-subtle">
                                                         <div class="row g-3">
-                                                            <div class="col-md-6">
-                                                                <label class="form-label small text-primary fw-bold">Iuran
-                                                                    Wajib</label>
+                                                            @foreach ($kategori_simpanan as $kat)
+                                                            <div class="col-md-4">
+                                                                <label class="form-label small text-primary fw-bold">{{ $kat->nama }}</label>
                                                                 <div class="input-group">
                                                                     <input type="text"
                                                                         class="form-control fw-bold currency-input"
-                                                                        name="iuran_wajib" placeholder="Rp 0">
+                                                                        name="simpanan[{{ $kat->id }}]" placeholder="Rp 0">
                                                                 </div>
                                                             </div>
-                                                            <div class="col-md-6">
-                                                                <label class="form-label small text-primary fw-bold">Iuran
-                                                                    Pokok</label>
-                                                                <div class="input-group">
-                                                                    <input type="text"
-                                                                        class="form-control fw-bold currency-input"
-                                                                        name="iuran_pokok" placeholder="Rp 0">
-                                                                </div>
-                                                            </div>
+                                                            @endforeach
                                                         </div>
                                                     </div>
                                                 </div>

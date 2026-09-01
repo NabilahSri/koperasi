@@ -26,6 +26,9 @@ class UserAdminController extends Controller
         $lastUser = User::orderByRaw('CAST(no_user AS UNSIGNED) DESC')->first();
         $data['nextNoUser'] = $lastUser ? str_pad((int)$lastUser->no_user + 1, 3, '0', STR_PAD_LEFT) : '001';
 
+        $jenisSimpanan = \App\Models\Jenis::where('nama', 'Simpanan')->first();
+        $data['kategori_simpanan'] = $jenisSimpanan ? Kategori::where('id_jenis', $jenisSimpanan->id)->get() : collect();
+
         return view('admin.pages.users', $data);
     }
 
@@ -88,31 +91,24 @@ class UserAdminController extends Controller
         ]);
 
         if ($user) {
-            $kategoriPokok = Kategori::where('nama', 'Iuran Pokok')->first();
-            $kategoriWajib = Kategori::where('nama', 'Iuran Wajib')->first();
-
-            if ($req->iuran_pokok && $kategoriPokok) {
-                TransaksiS::create([
-                    'id_user' => $user->id,
-                    'id_kategori' => $kategoriPokok->id,
-                    'id_petugas' => Auth::id(),
-                    'nama_penyetor' => $user->name,
-                    'jumlah' => str_replace(['Rp ', '.'], '', $req->iuran_pokok),
-                    'tanggal' => date('Y-m-d'),
-                    'keterangan' => 'Iuran Pokok',
-                ]);
-            }
-
-            if ($req->iuran_wajib && $kategoriWajib) {
-                TransaksiS::create([
-                    'id_user' => $user->id,
-                    'id_kategori' => $kategoriWajib->id,
-                    'id_petugas' => Auth::id(),
-                    'nama_penyetor' => $user->name,
-                    'jumlah' => str_replace(['Rp ', '.'], '', $req->iuran_wajib),
-                    'tanggal' => date('Y-m-d'),
-                    'keterangan' => 'Iuran Wajib',
-                ]);
+            if ($req->has('simpanan') && is_array($req->simpanan)) {
+                foreach ($req->simpanan as $id_kategori => $jumlah) {
+                    $jumlah_bersih = str_replace(['Rp ', '.'], '', $jumlah);
+                    if ((int)$jumlah_bersih > 0) {
+                        $kategori = Kategori::find($id_kategori);
+                        if ($kategori) {
+                            TransaksiS::create([
+                                'id_user' => $user->id,
+                                'id_kategori' => $kategori->id,
+                                'id_petugas' => Auth::id(),
+                                'nama_penyetor' => $user->name,
+                                'jumlah' => $jumlah_bersih,
+                                'tanggal' => date('Y-m-d'),
+                                'keterangan' => $kategori->nama,
+                            ]);
+                        }
+                    }
+                }
             }
         }
 
