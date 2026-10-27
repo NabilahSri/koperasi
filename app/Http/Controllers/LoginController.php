@@ -13,8 +13,7 @@ class LoginController extends Controller
 {
     public function index()
     {
-        // echo "sadad";
-        $data['pengaturan'] = Lembaga::all();
+        $data['pengaturan'] = Lembaga::first();
         return view('pages.login', $data);
     }
 

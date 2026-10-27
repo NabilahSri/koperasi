@@ -19,6 +19,11 @@
                             class="nav-icon flex-shrink-0"><i class="bi bi-people fs-18"></i></span> <span
                             class="nav-text">Users</span></a>
                 </li>
+                <li class="menu-item {{ request()->is('kartu-anggota*') ? 'active' : '' }}"><a
+                        href="{{ url('kartu-anggota') }}"> <span class="nav-icon flex-shrink-0"><i
+                                class="bi bi-card-checklist fs-18"></i></span> <span
+                            class="nav-text">Kartu Anggota</span></a>
+                </li>
                 <li class="menu-item {{ request()->is('tunggakan') ? 'active' : '' }}"><a
                         href="{{ url('tunggakan') }}"><span class="nav-icon flex-shrink-0"><i
                                 class="bi bi-exclamation-circle fs-18"></i></span> <span class="nav-text">Info
@@ -29,6 +34,8 @@
                 <li class="menu-item {{ request()->is('kategori') ? 'active' : '' }}"><a
                         href="{{ url('kategori') }}"><span class="nav-icon flex-shrink-0"><i
                                 class="bi bi-archive fs-18"></i></span> <span class="nav-text">Kategori</span></a></li>
+                {{-- Menu transaksi terpisah disembunyikan karena sudah disatukan ke Kartu Anggota --}}
+                {{--
                 <li class="menu-item {{ request()->is('simpanan') ? 'active' : '' }}"><a
                         href="{{ url('simpanan') }}"><span class="nav-icon flex-shrink-0"><i
                                 class="bi bi-wallet2 fs-18"></i></span> <span class="nav-text">Simpanan</span></a></li>
@@ -49,6 +56,7 @@
                     </ul>
                     <span class='submenu-opener'><i class='bi bi-chevron-right'></i></span>
                 </li>
+                --}}
                 <li class="menu-item {{ request()->is('bantuan*') ? 'active' : '' }}"><a
                         href="{{ url('bantuan') }}"><span class="nav-icon flex-shrink-0"><i
                                 class="bi bi-box2-heart fs-18"></i></span> <span class="nav-text">Bantuan</span></a>

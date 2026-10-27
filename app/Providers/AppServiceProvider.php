@@ -15,7 +15,7 @@ class AppServiceProvider extends ServiceProvider
         View::composer('*', function ($view) {
             $lembaga = DB::table('lembaga')->where('id', 1)->first();
             $nama = $lembaga ? $lembaga->nama : '';
-            $logoPath = $lembaga && $lembaga->logo ? asset('storage/' . $lembaga->logo) : '/assets/img/logo-icon.svg';
+            $logoPath = $lembaga && !empty($lembaga->logo) ? asset('storage/' . $lembaga->logo) : asset('assets/img/logo-icon.svg');
             $view->with([
                 'lembaga' => $lembaga,
                 'nama' => $nama,

@@ -14,8 +14,17 @@ use App\Http\Controllers\Admin\LaporanController;
 use App\Http\Controllers\Admin\ActivityLogController;
 use App\Http\Controllers\Admin\PengambilanSimpananController;
 use App\Http\Controllers\Admin\BantuanController;
+use App\Http\Controllers\Admin\KartuAnggotaController;
 
 Route::get('/dashboard', [DashboardController::class, 'index']);
+
+Route::get('/kartu-anggota', [KartuAnggotaController::class, 'index'])->name('kartu.anggota');
+Route::post('/kartu-anggota/simpanan', [KartuAnggotaController::class, 'storeSimpanan'])->name('kartu.simpanan.store');
+Route::post('/kartu-anggota/pengambilan', [KartuAnggotaController::class, 'storePengambilan'])->name('kartu.pengambilan.store');
+Route::post('/kartu-anggota/pinjaman', [KartuAnggotaController::class, 'storePinjaman'])->name('kartu.pinjaman.store');
+Route::post('/kartu-anggota/bayar-angsuran', [KartuAnggotaController::class, 'storeBayarAngsuran'])->name('kartu.angsuran.store');
+Route::post('/kartu-anggota/catatan', [KartuAnggotaController::class, 'updateCatatan'])->name('kartu.catatan.update');
+Route::get('/kartu-anggota/saldo/{userId}/{kategoriId}', [KartuAnggotaController::class, 'getSaldoKategori'])->name('kartu.saldo');
 
 Route::get('/jenis', [JenisController::class, 'index'])->name('jenis');
 Route::post('/jenis/create', [JenisController::class, 'create']);

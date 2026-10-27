@@ -14,7 +14,7 @@
     <!-- Favicon and touch Icons -->
     @php
         $lembaga = DB::table('lembaga')->where('id', 1)->first();
-        $logoPath = $lembaga ? asset('storage/' . $lembaga->logo) : '/assets/img/logo-icon.svg';
+        $logoPath = $lembaga && !empty($lembaga->logo) ? asset('storage/' . $lembaga->logo) : asset('assets/img/logo-icon.svg');
     @endphp
     <link href="{{ $logoPath }}" rel="shortcut icon" type="image/png">
     <link href="assets/img/apple-touch-icon.html" rel="apple-touch-icon">
@@ -37,47 +37,45 @@
 
 <body class="bg-primary">
     <!-- Preloader -->
-    @foreach ($pengaturan as $item)
-        <div id="preloader">
-            <div class="preloader-inner">
-                <div class="spinner"></div>
-                <div class="logo"><img src="{{ asset('storage/' . $item->logo) }}" alt="img"></div>
-            </div>
+    <div id="preloader">
+        <div class="preloader-inner">
+            <div class="spinner"></div>
+            <div class="logo"><img src="{{ $logoPath }}" alt="img"></div>
         </div>
+    </div>
 
-        <!-- Login Form -->
-        <div class="row align-items-center justify-content-center vh-100">
-            <div class="col-xxl-4 col-xl-5 col-lg-5 col-md-6">
-                <div class="card rounded-2 border-0 p-5 m-0">
-                    <div class="card-header border-0 p-0 text-center">
-                        <a href="#" class="d-inline-block mb-5">
-                            <img src="{{ asset('storage/' . $item->logo) }}" alt="img" width="35%">
-                        </a>
-                        <h3>Selamat Datang Kembali!</h3>
-                        <p class="fs-14 text-dark my-4">Silahkan masuk menggunakan akun anda.</p>
-                    </div>
-                    <div class="card-body p-0">
-                        <form class="form-horizontal" method="post" action="/login">
-                            @csrf
-                            <div class="form-group">
-                                <input type="text" class="form-control" name="no_user" value=""
-                                    placeholder="Username" required autofocus>
-                            </div>
+    <!-- Login Form -->
+    <div class="row align-items-center justify-content-center vh-100">
+        <div class="col-xxl-4 col-xl-5 col-lg-5 col-md-6">
+            <div class="card rounded-2 border-0 p-5 m-0">
+                <div class="card-header border-0 p-0 text-center">
+                    <a href="#" class="d-inline-block mb-5">
+                        <img src="{{ $logoPath }}" alt="img" width="35%">
+                    </a>
+                    <h3>Selamat Datang Kembali!</h3>
+                    <p class="fs-14 text-dark my-4">Silahkan masuk menggunakan akun anda.</p>
+                </div>
+                <div class="card-body p-0">
+                    <form class="form-horizontal" method="post" action="/login">
+                        @csrf
+                        <div class="form-group">
+                            <input type="text" class="form-control" name="no_user" value=""
+                                placeholder="Username" required autofocus>
+                        </div>
 
-                            <div class="form-group">
-                                <input type="password" class="form-control" name="password" value=""
-                                    placeholder="Password" required>
-                            </div>
+                        <div class="form-group">
+                            <input type="password" class="form-control" name="password" value=""
+                                placeholder="Password" required>
+                        </div>
 
-                            <button type="submit"
-                                class="btn btn-secondary w-100 text-uppercase text-white rounded-2 lh-34 ff-heading fw-bold shadow">
-                                Login</button>
-                        </form>
-                    </div>
+                        <button type="submit"
+                            class="btn btn-secondary w-100 text-uppercase text-white rounded-2 lh-34 ff-heading fw-bold shadow">
+                            Login</button>
+                    </form>
                 </div>
             </div>
         </div>
-    @endforeach
+    </div>
 
 
 
