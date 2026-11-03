@@ -51,6 +51,7 @@ class KartuAnggotaController extends Controller
         $saldoSimpananAkhir = 0;
 
         $pengajuanAktif = collect();
+        $pengajuanList = collect();
         $kategoriSimpanan = Kategori::where('id_jenis', 1)->get();
         $kategoriTagihan = Kategori::where('id_jenis', 2)->get();
 
@@ -79,8 +80,11 @@ class KartuAnggotaController extends Controller
                     'date' => $pj->tanggal_pengajuan,
                     'created_at' => $pj->created_at,
                     'id' => $pj->id,
+                    'id_pengajuan' => $pj->id,
+                    'group_ids' => (string) $pj->id,
                     'nominal_pinjaman' => (int) $pj->nominal_pinjaman,
                     'propisi' => (int) ($pj->propisi ?? 0),
+                    'nominal_bagihasil_master' => (int) ($pj->nominal_bagihasil ?? 0),
                     'cicilan' => 0,
                     'bagi_hasil' => 0,
                     'keterangan' => $pj->keterangan,
@@ -90,9 +94,9 @@ class KartuAnggotaController extends Controller
                 $totalPropisi += (int) ($pj->propisi ?? 0);
             }
 
-            // Group tagihan by tanggal & id_pengajuan agar cicilan + bagi hasil tampil 1 baris jika di tanggal sama
-            $groupedTagihan = $transaksiTagihanList->groupBy(function ($item) {
-                return $item->tanggal . '_' . $item->id_pengajuan . '_' . $item->created_at->format('YmdHis');
+            // Group tagihan by tanggal & id_pengajuan agar cicilan + bagi hasil di tanggal yang sama tampil 1 baris
+            $groupedTagihan = $transaksiTagihanList->where('jumlah', '>', 0)->groupBy(function ($item) {
+                return $item->tanggal . '_' . $item->id_pengajuan;
             });
 
             $katPinjaman = Kategori::where('nama', 'Pinjaman')->first();
@@ -117,8 +121,11 @@ class KartuAnggotaController extends Controller
                     'date' => $first->tanggal,
                     'created_at' => $first->created_at,
                     'id' => $first->id,
+                    'id_pengajuan' => $first->id_pengajuan,
+                    'group_ids' => $group->pluck('id')->implode(','),
                     'nominal_pinjaman' => 0,
                     'propisi' => 0,
+                    'nominal_bagihasil_master' => 0,
                     'cicilan' => $cicilan,
                     'bagi_hasil' => $bagiHasil,
                     'keterangan' => $first->keterangan ?? 'Bayar Angsuran',
@@ -143,8 +150,13 @@ class KartuAnggotaController extends Controller
                 }
 
                 $tagihanRows[] = [
+                    'type' => $item['type'],
+                    'id' => $item['id'],
+                    'id_pengajuan' => $item['id_pengajuan'],
+                    'group_ids' => $item['group_ids'],
                     'tanggal' => $item['date'],
                     'besar_pinjaman' => $item['nominal_pinjaman'] > 0 ? $item['nominal_pinjaman'] : null,
+                    'nominal_bagihasil_master' => $item['nominal_bagihasil_master'] ?? 0,
                     'cicilan' => $item['cicilan'] > 0 ? $item['cicilan'] : null,
                     'sisa_utang' => $currentUtang,
                     'bagi_hasil' => $item['bagi_hasil'] > 0 ? $item['bagi_hasil'] : null,
@@ -158,12 +170,14 @@ class KartuAnggotaController extends Controller
             // 2. Ambil & Susun Data Kekayaan Anggota (Simpanan & Pengambilan)
             $transaksiSimpananList = TransaksiS::with(['kategori', 'petugas'])
                 ->where('id_user', $selectedUser->id)
+                ->where('jumlah', '>', 0)
                 ->orderBy('tanggal', 'asc')
                 ->orderBy('id', 'asc')
                 ->get();
 
             $pengambilanList = PengambilanSimpanan::with(['kategori', 'petugas'])
                 ->where('id_user', $selectedUser->id)
+                ->where('jumlah', '>', 0)
                 ->orderBy('tanggal', 'asc')
                 ->orderBy('id', 'asc')
                 ->get();
@@ -172,45 +186,41 @@ class KartuAnggotaController extends Controller
 
             foreach ($transaksiSimpananList as $ts) {
                 $katNama = strtolower($ts->kategori->nama ?? '');
-                $pokok = 0;
-                $wajib = 0;
-                $manasuka = 0;
-                $lebaran = 0;
-                $niaga = 0;
+                $nominal = (int) $ts->jumlah;
+                $colKey = 'manasuka';
 
                 if (str_contains($katNama, 'pokok')) {
-                    $pokok = (int) $ts->jumlah;
-                    $totalSimpPokok += $pokok;
+                    $colKey = 'pokok';
+                    $totalSimpPokok += $nominal;
                 } elseif (str_contains($katNama, 'wajib')) {
-                    $wajib = (int) $ts->jumlah;
-                    $totalSimpWajib += $wajib;
+                    $colKey = 'wajib';
+                    $totalSimpWajib += $nominal;
                 } elseif (str_contains($katNama, 'manasuka')) {
-                    $manasuka = (int) $ts->jumlah;
-                    $totalSimpManasuka += $manasuka;
+                    $colKey = 'manasuka';
+                    $totalSimpManasuka += $nominal;
                 } elseif (str_contains($katNama, 'lebaran')) {
-                    $lebaran = (int) $ts->jumlah;
-                    $totalSimpLebaran += $lebaran;
+                    $colKey = 'lebaran';
+                    $totalSimpLebaran += $nominal;
                 } elseif (str_contains($katNama, 'niaga')) {
-                    $niaga = (int) $ts->jumlah;
-                    $totalSimpNiaga += $niaga;
+                    $colKey = 'niaga';
+                    $totalSimpNiaga += $nominal;
                 } else {
-                    $manasuka = (int) $ts->jumlah;
-                    $totalSimpManasuka += $manasuka;
+                    $colKey = 'manasuka';
+                    $totalSimpManasuka += $nominal;
                 }
 
-                $totalSimpananKotor += (int) $ts->jumlah;
+                $totalSimpananKotor += $nominal;
 
                 $simpananEvents->push([
                     'type' => 'simpanan',
+                    'col' => $colKey,
                     'date' => $ts->tanggal,
                     'created_at' => $ts->created_at,
                     'id' => $ts->id,
-                    'pokok' => $pokok,
-                    'wajib' => $wajib,
-                    'manasuka' => $manasuka,
-                    'lebaran' => $lebaran,
-                    'niaga' => $niaga,
-                    'pengambilan' => 0,
+                    'id_kategori' => $ts->id_kategori,
+                    'kategori_nama' => $ts->kategori->nama ?? ucfirst($colKey),
+                    'nominal_raw' => $nominal,
+                    'nama_pihak' => $ts->nama_penyetor ?: ($selectedUser->name ?? ''),
                     'paraf' => $ts->petugas->name ?? 'Admin',
                     'keterangan' => $ts->keterangan ?? 'Setoran',
                 ]);
@@ -222,43 +232,80 @@ class KartuAnggotaController extends Controller
 
                 $simpananEvents->push([
                     'type' => 'pengambilan',
+                    'col' => 'pengambilan',
                     'date' => $ps->tanggal,
                     'created_at' => $ps->created_at,
                     'id' => $ps->id,
-                    'pokok' => 0,
-                    'wajib' => 0,
-                    'manasuka' => 0,
-                    'lebaran' => 0,
-                    'niaga' => 0,
-                    'pengambilan' => $jumlahAmbil,
+                    'id_kategori' => $ps->id_kategori,
+                    'kategori_nama' => $ps->kategori->nama ?? 'Penarikan Simpanan',
+                    'nominal_raw' => $jumlahAmbil,
+                    'nama_pihak' => $ps->nama_pengambil ?: ($selectedUser->name ?? ''),
                     'paraf' => $ps->petugas->name ?? 'Admin',
                     'keterangan' => $ps->keterangan ?? 'Penarikan Simpanan',
                 ]);
             }
 
-            $sortedSimpanan = $simpananEvents->sortBy(function ($item) {
-                return $item['date'] . '_' . ($item['type'] === 'simpanan' ? '0' : '1') . '_' . $item['created_at'];
-            });
+            // Gabungkan transaksi Kekayaan Anggota yang memiliki tanggal yang sama menjadi 1 baris
+            $groupedSimpananByDate = $simpananEvents
+                ->sortBy(function ($item) {
+                    return $item['date'] . '_' . ($item['type'] === 'simpanan' ? '0' : '1') . '_' . $item['id'];
+                })
+                ->groupBy('date');
 
             $currentSaldoSimpanan = 0;
-            foreach ($sortedSimpanan as $item) {
-                if ($item['type'] === 'simpanan') {
-                    $currentSaldoSimpanan += ($item['pokok'] + $item['wajib'] + $item['manasuka'] + $item['lebaran'] + $item['niaga']);
-                } else {
-                    $currentSaldoSimpanan = max(0, $currentSaldoSimpanan - $item['pengambilan']);
+            $colKeys = ['pokok', 'wajib', 'manasuka', 'lebaran', 'niaga', 'pengambilan'];
+
+            foreach ($groupedSimpananByDate as $date => $eventsOnDate) {
+                $colTotals = [
+                    'pokok' => 0,
+                    'wajib' => 0,
+                    'manasuka' => 0,
+                    'lebaran' => 0,
+                    'niaga' => 0,
+                    'pengambilan' => 0,
+                ];
+                $cells = [];
+
+                foreach ($colKeys as $col) {
+                    $colEvents = $eventsOnDate->where('col', $col);
+                    if ($colEvents->isNotEmpty()) {
+                        $sumCol = (int) $colEvents->sum('nominal_raw');
+                        $colTotals[$col] = $sumCol;
+                        $firstCol = $colEvents->first();
+
+                        $cells[$col] = [
+                            'type' => $firstCol['type'],
+                            'id' => $firstCol['id'],
+                            'group_ids' => $colEvents->pluck('id')->implode(','),
+                            'id_kategori' => $firstCol['id_kategori'],
+                            'kategori_nama' => $firstCol['kategori_nama'],
+                            'nominal' => $sumCol,
+                            'tanggal' => $date,
+                            'nama_pihak' => $firstCol['nama_pihak'],
+                            'keterangan' => $firstCol['keterangan'],
+                        ];
+                    }
                 }
 
+                $totalMasukHariIni = $colTotals['pokok'] + $colTotals['wajib'] + $colTotals['manasuka'] + $colTotals['lebaran'] + $colTotals['niaga'];
+                $currentSaldoSimpanan = max(0, $currentSaldoSimpanan + $totalMasukHariIni - $colTotals['pengambilan']);
+
+                $firstEvent = $eventsOnDate->first();
+                $singleCell = count($cells) === 1 ? reset($cells) : null;
+
                 $simpananRows[] = [
-                    'tanggal' => $item['date'],
-                    'pokok' => $item['pokok'] > 0 ? $item['pokok'] : null,
-                    'wajib' => $item['wajib'] > 0 ? $item['wajib'] : null,
-                    'manasuka' => $item['manasuka'] > 0 ? $item['manasuka'] : null,
-                    'lebaran' => $item['lebaran'] > 0 ? $item['lebaran'] : null,
-                    'niaga' => $item['niaga'] > 0 ? $item['niaga'] : null,
+                    'tanggal' => $date,
+                    'pokok' => $colTotals['pokok'] > 0 ? $colTotals['pokok'] : null,
+                    'wajib' => $colTotals['wajib'] > 0 ? $colTotals['wajib'] : null,
+                    'manasuka' => $colTotals['manasuka'] > 0 ? $colTotals['manasuka'] : null,
+                    'lebaran' => $colTotals['lebaran'] > 0 ? $colTotals['lebaran'] : null,
+                    'niaga' => $colTotals['niaga'] > 0 ? $colTotals['niaga'] : null,
                     'jumlah_simpanan' => $currentSaldoSimpanan,
-                    'pengambilan' => $item['pengambilan'] > 0 ? $item['pengambilan'] : null,
-                    'paraf' => $item['paraf'],
-                    'keterangan' => $item['keterangan'],
+                    'pengambilan' => $colTotals['pengambilan'] > 0 ? $colTotals['pengambilan'] : null,
+                    'paraf' => $firstEvent['paraf'] ?? 'Admin',
+                    'keterangan' => $firstEvent['keterangan'] ?? '',
+                    'cells' => $cells,
+                    'single_cell' => $singleCell,
                 ];
             }
             $saldoSimpananAkhir = $currentSaldoSimpanan;
@@ -360,6 +407,7 @@ class KartuAnggotaController extends Controller
             'totalPengambilan',
             'saldoSimpananAkhir',
             'pengajuanAktif',
+            'pengajuanList',
             'kategoriSimpanan',
             'kategoriTagihan'
         ));
@@ -580,5 +628,421 @@ class KartuAnggotaController extends Controller
             'saldo' => $saldo,
             'saldo_rp' => 'Rp ' . number_format($saldo, 0, ',', '.'),
         ]);
+    }
+
+    public function updateSimpanan(Request $request, $id)
+    {
+        $request->validate([
+            'id_kategori' => 'required|exists:kategori,id',
+            'jumlah' => 'required',
+            'tanggal' => 'required|date',
+            'keterangan' => 'nullable|string',
+            'nama_penyetor' => 'nullable|string',
+        ]);
+
+        $simpanan = TransaksiS::findOrFail($id);
+        $userId = $simpanan->id_user;
+        $oldKategoriId = $simpanan->id_kategori;
+        $newKategoriId = (int) $request->id_kategori;
+        $nominalBaru = (int) preg_replace('/[^0-9]/', '', (string) $request->jumlah);
+
+        $groupIds = $request->filled('group_ids')
+            ? array_filter(array_map('intval', explode(',', $request->group_ids)))
+            : [$simpanan->id];
+        if (empty($groupIds)) {
+            $groupIds = [$simpanan->id];
+        }
+
+        if ($nominalBaru <= 0) {
+            return redirect()->back()->with('error', 'Nominal simpanan harus lebih dari 0.');
+        }
+
+        // Jika kategori diubah, pastikan saldo kategori lama tidak menjadi minus
+        if ($oldKategoriId != $newKategoriId) {
+            $masukLamaSelainIni = TransaksiS::where('id_user', $userId)
+                ->where('id_kategori', $oldKategoriId)
+                ->whereNotIn('id', $groupIds)
+                ->sum('jumlah');
+            $keluarLama = PengambilanSimpanan::where('id_user', $userId)
+                ->where('id_kategori', $oldKategoriId)
+                ->sum('jumlah');
+
+            if ($masukLamaSelainIni < $keluarLama) {
+                return redirect()->back()->with('error', 'Tidak dapat memindahkan kategori setoran ini karena saldo pada kategori asal sudah pernah ditarik dan akan menjadi minus.');
+            }
+        } else {
+            // Jika kategori sama namun nominal dikurangi, pastikan total masuk masih >= total keluar
+            $masukSelainIni = TransaksiS::where('id_user', $userId)
+                ->where('id_kategori', $oldKategoriId)
+                ->whereNotIn('id', $groupIds)
+                ->sum('jumlah');
+            $keluar = PengambilanSimpanan::where('id_user', $userId)
+                ->where('id_kategori', $oldKategoriId)
+                ->sum('jumlah');
+
+            if (($masukSelainIni + $nominalBaru) < $keluar) {
+                return redirect()->back()->with('error', 'Nominal simpanan tidak boleh lebih kecil dari total penarikan yang sudah dilakukan pada kategori ini.');
+            }
+        }
+
+        $simpanan->update([
+            'id_kategori' => $newKategoriId,
+            'nama_penyetor' => $request->nama_penyetor ?: $simpanan->nama_penyetor,
+            'jumlah' => $nominalBaru,
+            'tanggal' => $request->tanggal,
+            'keterangan' => $request->keterangan ?: 'Setoran Simpanan',
+        ]);
+
+        // Jika sebelumnya ada duplikat di tanggal & kategori yang sama dalam sel ini, hapus sisanya agar total sesuai
+        $extraIds = array_diff($groupIds, [$simpanan->id]);
+        if (!empty($extraIds)) {
+            TransaksiS::where('id_user', $userId)->whereIn('id', $extraIds)->delete();
+        }
+
+        return redirect()->route('kartu.anggota', ['user_id' => $userId])
+            ->with('success', 'Data setoran simpanan berhasil diperbarui.');
+    }
+
+    public function deleteSimpanan(Request $request, $id)
+    {
+        $simpanan = TransaksiS::findOrFail($id);
+        $userId = $simpanan->id_user;
+
+        $groupIds = $request->filled('group_ids')
+            ? array_filter(array_map('intval', explode(',', $request->group_ids)))
+            : [$simpanan->id];
+        if (empty($groupIds)) {
+            $groupIds = [$simpanan->id];
+        }
+
+        $masukSelainIni = TransaksiS::where('id_user', $userId)
+            ->where('id_kategori', $simpanan->id_kategori)
+            ->whereNotIn('id', $groupIds)
+            ->sum('jumlah');
+        $keluar = PengambilanSimpanan::where('id_user', $userId)
+            ->where('id_kategori', $simpanan->id_kategori)
+            ->sum('jumlah');
+
+        if ($masukSelainIni < $keluar) {
+            return redirect()->back()->with('error', 'Setoran ini tidak dapat dihapus karena sebagian/seluruh saldonya sudah pernah ditarik (saldo kategori akan menjadi minus).');
+        }
+
+        $records = TransaksiS::where('id_user', $userId)->whereIn('id', $groupIds)->get();
+        foreach ($records as $rec) {
+            $rec->delete();
+        }
+
+        return redirect()->route('kartu.anggota', ['user_id' => $userId])
+            ->with('success', 'Data setoran simpanan berhasil dihapus.');
+    }
+
+    public function updatePengambilan(Request $request, $id)
+    {
+        $request->validate([
+            'id_kategori' => 'required|exists:kategori,id',
+            'jumlah' => 'required',
+            'tanggal' => 'required|date',
+            'keterangan' => 'nullable|string',
+            'nama_pengambil' => 'nullable|string',
+        ]);
+
+        $pengambilan = PengambilanSimpanan::findOrFail($id);
+        $userId = $pengambilan->id_user;
+        $newKategoriId = (int) $request->id_kategori;
+        $nominalBaru = (int) preg_replace('/[^0-9]/', '', (string) $request->jumlah);
+
+        $groupIds = $request->filled('group_ids')
+            ? array_filter(array_map('intval', explode(',', $request->group_ids)))
+            : [$pengambilan->id];
+        if (empty($groupIds)) {
+            $groupIds = [$pengambilan->id];
+        }
+
+        if ($nominalBaru <= 0) {
+            return redirect()->back()->with('error', 'Nominal penarikan harus lebih dari 0.');
+        }
+
+        $totalMasuk = TransaksiS::where('id_user', $userId)
+            ->where('id_kategori', $newKategoriId)
+            ->sum('jumlah');
+
+        $totalKeluarSelainIni = PengambilanSimpanan::where('id_user', $userId)
+            ->where('id_kategori', $newKategoriId)
+            ->whereNotIn('id', $groupIds)
+            ->sum('jumlah');
+
+        $saldoTersedia = $totalMasuk - $totalKeluarSelainIni;
+
+        if ($nominalBaru > $saldoTersedia) {
+            return redirect()->back()->with('error', 'Saldo tidak mencukupi untuk perubahan ini. Saldo tersedia di kategori tersebut: Rp ' . number_format(max(0, $saldoTersedia), 0, ',', '.'));
+        }
+
+        $pengambilan->update([
+            'id_kategori' => $newKategoriId,
+            'nama_pengambil' => $request->nama_pengambil ?: $pengambilan->nama_pengambil,
+            'jumlah' => $nominalBaru,
+            'tanggal' => $request->tanggal,
+            'keterangan' => $request->keterangan ?: 'Penarikan Simpanan',
+        ]);
+
+        $extraIds = array_diff($groupIds, [$pengambilan->id]);
+        if (!empty($extraIds)) {
+            PengambilanSimpanan::where('id_user', $userId)->whereIn('id', $extraIds)->delete();
+        }
+
+        return redirect()->route('kartu.anggota', ['user_id' => $userId])
+            ->with('success', 'Data penarikan simpanan berhasil diperbarui.');
+    }
+
+    public function deletePengambilan(Request $request, $id)
+    {
+        $pengambilan = PengambilanSimpanan::findOrFail($id);
+        $userId = $pengambilan->id_user;
+
+        $groupIds = $request->filled('group_ids')
+            ? array_filter(array_map('intval', explode(',', $request->group_ids)))
+            : [$pengambilan->id];
+        if (empty($groupIds)) {
+            $groupIds = [$pengambilan->id];
+        }
+
+        $records = PengambilanSimpanan::where('id_user', $userId)->whereIn('id', $groupIds)->get();
+        foreach ($records as $rec) {
+            $rec->delete();
+        }
+
+        return redirect()->route('kartu.anggota', ['user_id' => $userId])
+            ->with('success', 'Data penarikan simpanan berhasil dihapus.');
+    }
+
+    public function updatePinjaman(Request $request, $id)
+    {
+        $request->validate([
+            'nominal_pinjaman' => 'required',
+            'propisi' => 'nullable',
+            'nominal_bagihasil' => 'nullable',
+            'tanggal_pengajuan' => 'required|date',
+        ]);
+
+        $pengajuan = Pengajuan::findOrFail($id);
+        $userId = $pengajuan->id_user;
+
+        $nominalPinjaman = (int) preg_replace('/[^0-9]/', '', (string) $request->nominal_pinjaman);
+        $propisi = (int) preg_replace('/[^0-9]/', '', (string) $request->propisi);
+        $nominalBagihasil = (int) preg_replace('/[^0-9]/', '', (string) $request->nominal_bagihasil);
+
+        if ($nominalPinjaman <= 0) {
+            return redirect()->back()->with('error', 'Nominal pinjaman harus lebih dari 0.');
+        }
+
+        if ($request->propisi === null || $request->propisi === '') {
+            $propisi = (int) round($nominalPinjaman * 0.01);
+        }
+
+        $pengajuan->update([
+            'nominal_pinjaman' => $nominalPinjaman,
+            'propisi' => $propisi,
+            'nominal_bagihasil' => $nominalBagihasil,
+            'tanggal_pengajuan' => $request->tanggal_pengajuan,
+        ]);
+
+        $this->syncStatusPengajuan($pengajuan->id);
+
+        return redirect()->route('kartu.anggota', ['user_id' => $userId])
+            ->with('success', 'Data pinjaman berhasil diperbarui.');
+    }
+
+    public function deletePinjaman(Request $request, $id)
+    {
+        $pengajuan = Pengajuan::findOrFail($id);
+        $userId = $pengajuan->id_user;
+
+        // Hapus seluruh transaksi angsuran yang terkait dengan pinjaman ini
+        $angsuranTerkait = TransaksiT::where('id_pengajuan', $pengajuan->id)->get();
+        foreach ($angsuranTerkait as $angsuran) {
+            $angsuran->delete();
+        }
+
+        $pengajuan->delete();
+
+        return redirect()->route('kartu.anggota', ['user_id' => $userId])
+            ->with('success', 'Data pinjaman beserta riwayat angsurannya berhasil dihapus.');
+    }
+
+    public function updateBayarAngsuran(Request $request)
+    {
+        $request->validate([
+            'id_user' => 'required|exists:users,id',
+            'group_ids' => 'required|string',
+            'id_pengajuan' => 'required|exists:pengajuan,id',
+            'nominal_angsuran' => 'nullable',
+            'nominal_bagihasil' => 'nullable',
+            'tanggal' => 'required|date',
+            'keterangan' => 'nullable|string',
+        ]);
+
+        $userId = (int) $request->id_user;
+        $groupIds = array_filter(array_map('intval', explode(',', $request->group_ids)));
+
+        $existingRecords = TransaksiT::where('id_user', $userId)
+            ->whereIn('id', $groupIds)
+            ->get();
+
+        if ($existingRecords->isEmpty()) {
+            return redirect()->back()->with('error', 'Data angsuran tidak ditemukan.');
+        }
+
+        $pengajuanBaru = Pengajuan::where('id', $request->id_pengajuan)
+            ->where('id_user', $userId)
+            ->firstOrFail();
+
+        $cicilan = (int) preg_replace('/[^0-9]/', '', (string) $request->nominal_angsuran);
+        $bagiHasil = (int) preg_replace('/[^0-9]/', '', (string) $request->nominal_bagihasil);
+
+        if ($cicilan <= 0 && $bagiHasil <= 0) {
+            return redirect()->back()->with('error', 'Masukkan minimal nominal angsuran pokok atau bagi hasil.');
+        }
+
+        $katPinjaman = Kategori::where('nama', 'Pinjaman')->first();
+        $idKatPinjaman = $katPinjaman ? $katPinjaman->id : 3;
+
+        $katBagiHasil = Kategori::where('nama', 'Bagi hasil')->orWhere('nama', 'Bagihasil')->first();
+        $idKatBagiHasil = $katBagiHasil ? $katBagiHasil->id : 4;
+
+        $oldPengajuanIds = $existingRecords->pluck('id_pengajuan')->unique()->toArray();
+        $refCreatedAt = $existingRecords->first()->created_at;
+
+        $recordCicilan = $existingRecords->first(function ($item) use ($idKatPinjaman) {
+            $namaKat = strtolower($item->kategori->nama ?? '');
+            return str_contains($namaKat, 'pinjam') || $item->id_kategori == $idKatPinjaman;
+        });
+
+        $recordBagiHasil = $existingRecords->first(function ($item) use ($idKatPinjaman, $recordCicilan) {
+            if ($recordCicilan && $item->id === $recordCicilan->id) {
+                return false;
+            }
+            $namaKat = strtolower($item->kategori->nama ?? '');
+            return !str_contains($namaKat, 'pinjam') && $item->id_kategori != $idKatPinjaman;
+        });
+
+        // 1. Update / Buat / Hapus Cicilan Pokok
+        if ($cicilan > 0) {
+            if ($recordCicilan) {
+                $recordCicilan->update([
+                    'id_pengajuan' => $pengajuanBaru->id,
+                    'id_kategori' => $idKatPinjaman,
+                    'jumlah' => $cicilan,
+                    'tanggal' => $request->tanggal,
+                    'keterangan' => $request->keterangan ?: 'Cicilan Pokok',
+                ]);
+            } else {
+                $newCicilan = new TransaksiT([
+                    'id_user' => $userId,
+                    'id_pengajuan' => $pengajuanBaru->id,
+                    'id_kategori' => $idKatPinjaman,
+                    'jumlah' => $cicilan,
+                    'tanggal' => $request->tanggal,
+                    'keterangan' => $request->keterangan ?: 'Cicilan Pokok',
+                ]);
+                $newCicilan->created_at = $refCreatedAt;
+                $newCicilan->save();
+            }
+        } elseif ($recordCicilan) {
+            $recordCicilan->delete();
+        }
+
+        // 2. Update / Buat / Hapus Bagi Hasil
+        if ($bagiHasil > 0) {
+            if ($recordBagiHasil) {
+                $recordBagiHasil->update([
+                    'id_pengajuan' => $pengajuanBaru->id,
+                    'id_kategori' => $idKatBagiHasil,
+                    'jumlah' => $bagiHasil,
+                    'tanggal' => $request->tanggal,
+                    'keterangan' => $request->keterangan ?: 'Bagi Hasil',
+                ]);
+            } else {
+                $newBagiHasil = new TransaksiT([
+                    'id_user' => $userId,
+                    'id_pengajuan' => $pengajuanBaru->id,
+                    'id_kategori' => $idKatBagiHasil,
+                    'jumlah' => $bagiHasil,
+                    'tanggal' => $request->tanggal,
+                    'keterangan' => $request->keterangan ?: 'Bagi Hasil',
+                ]);
+                $newBagiHasil->created_at = $refCreatedAt;
+                $newBagiHasil->save();
+            }
+        } elseif ($recordBagiHasil) {
+            $recordBagiHasil->delete();
+        }
+
+        $keptIds = array_filter([
+            $recordCicilan ? $recordCicilan->id : null,
+            $recordBagiHasil ? $recordBagiHasil->id : null,
+        ]);
+
+        foreach ($existingRecords as $rec) {
+            if (!in_array($rec->id, $keptIds)) {
+                $rec->delete();
+            }
+        }
+
+        // Sinkronisasi status lunas pada pengajuan lama & baru
+        $affectedPengajuanIds = array_unique(array_merge($oldPengajuanIds, [$pengajuanBaru->id]));
+        foreach ($affectedPengajuanIds as $pid) {
+            $this->syncStatusPengajuan($pid);
+        }
+
+        return redirect()->route('kartu.anggota', ['user_id' => $userId])
+            ->with('success', 'Data pembayaran angsuran berhasil diperbarui.');
+    }
+
+    public function deleteBayarAngsuran(Request $request)
+    {
+        $request->validate([
+            'id_user' => 'required|exists:users,id',
+            'group_ids' => 'required|string',
+        ]);
+
+        $userId = (int) $request->id_user;
+        $groupIds = array_filter(array_map('intval', explode(',', $request->group_ids)));
+
+        $records = TransaksiT::where('id_user', $userId)
+            ->whereIn('id', $groupIds)
+            ->get();
+
+        $affectedPengajuanIds = $records->pluck('id_pengajuan')->unique()->toArray();
+
+        foreach ($records as $rec) {
+            $rec->delete();
+        }
+
+        foreach ($affectedPengajuanIds as $pid) {
+            $this->syncStatusPengajuan($pid);
+        }
+
+        return redirect()->route('kartu.anggota', ['user_id' => $userId])
+            ->with('success', 'Data pembayaran angsuran berhasil dihapus.');
+    }
+
+    private function syncStatusPengajuan($idPengajuan)
+    {
+        $pengajuan = Pengajuan::find($idPengajuan);
+        if (!$pengajuan) {
+            return;
+        }
+
+        $katPinjaman = Kategori::where('nama', 'Pinjaman')->first();
+        $idKatPinjaman = $katPinjaman ? $katPinjaman->id : 3;
+
+        $totalBayarPinjaman = TransaksiT::where('id_pengajuan', $pengajuan->id)
+            ->where('id_kategori', $idKatPinjaman)
+            ->sum('jumlah');
+
+        $status = $totalBayarPinjaman >= (int) $pengajuan->nominal_pinjaman ? 'sudah lunas' : 'belum lunas';
+        if ($pengajuan->keterangan !== $status) {
+            $pengajuan->update(['keterangan' => $status]);
+        }
     }
 }

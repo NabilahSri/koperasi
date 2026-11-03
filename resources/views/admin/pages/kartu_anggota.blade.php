@@ -191,7 +191,27 @@
         }
 
         .table-kartu tbody tr:hover td {
-            background: #f0f7ff;
+            background: #f8faff;
+        }
+
+        .table-kartu tbody tr td.cell-clickable-tagihan,
+        .table-kartu tbody tr td.cell-clickable-simpanan,
+        .table-kartu tbody tr td.cell-item-simpanan {
+            cursor: pointer;
+            transition: background-color 0.15s ease;
+        }
+
+        .table-kartu tbody tr td.side-hover-tagihan {
+            background-color: #ffeef0 !important;
+        }
+
+        .table-kartu tbody tr td.side-hover-simpanan {
+            background-color: #eef6ff !important;
+        }
+
+        .table-kartu tbody tr td.cell-item-simpanan:hover {
+            background-color: #cfe6ff !important;
+            font-weight: 700;
         }
 
         .row-pindahan td {
@@ -458,8 +478,8 @@
                             </ul>
                         </div>
                         <div class="text-muted small">
-                            <i class="bi bi-info-circle me-1"></i> Masing-masing lembar memuat tepat <strong>25
-                                baris</strong>
+                            <span class="me-3"><i class="bi bi-hand-index-thumb text-primary me-1"></i> Klik pada baris transaksi yang terisi untuk <strong>Edit / Hapus</strong></span>
+                            <i class="bi bi-info-circle me-1"></i> 25 baris / lembar
                         </div>
                     </div>
 
@@ -632,54 +652,141 @@
                                                     @php
                                                         $t = $row['tagihan'];
                                                         $s = $row['simpanan'];
+                                                        $tClass = $t ? 'cell-clickable-tagihan' : '';
+                                                        $tTitle = $t ? 'Klik untuk Edit / Hapus ' . ($t['type'] === 'pinjaman' ? 'Pinjaman' : 'Angsuran') . ' (' . date('d/m/Y', strtotime($t['tanggal'])) . ')' : '';
+
+                                                        $sSingle = $s['single_cell'] ?? null;
+                                                        $sBaseClass = $sSingle ? 'cell-item-simpanan' : '';
+                                                        $sBaseTitle = $sSingle
+                                                            ? 'Klik untuk Edit / Hapus ' . $sSingle['kategori_nama'] . ' (' . date('d/m/Y', strtotime($s['tanggal'])) . ')'
+                                                            : ($s ? 'Klik pada angka nominal simpanan/penarikan untuk Edit / Hapus' : '');
                                                     @endphp
-                                                    <tr>
+                                                    <tr
+                                                        @if ($t)
+                                                            data-t-type="{{ $t['type'] }}"
+                                                            data-t-id="{{ $t['id'] }}"
+                                                            data-t-pengajuan="{{ $t['id_pengajuan'] }}"
+                                                            data-t-group-ids="{{ $t['group_ids'] }}"
+                                                            data-t-tanggal="{{ date('Y-m-d', strtotime($t['tanggal'])) }}"
+                                                            data-t-pinjaman="{{ $t['besar_pinjaman'] ?? 0 }}"
+                                                            data-t-propisi="{{ $t['propisi'] ?? 0 }}"
+                                                            data-t-bagihasil-master="{{ $t['nominal_bagihasil_master'] ?? 0 }}"
+                                                            data-t-cicilan="{{ $t['cicilan'] ?? 0 }}"
+                                                            data-t-bagihasil="{{ $t['bagi_hasil'] ?? 0 }}"
+                                                            data-t-keterangan="{{ $t['keterangan'] ?? '' }}"
+                                                        @endif
+                                                    >
                                                         <!-- Kolom Tagihan -->
-                                                        <td class="text-center">
+                                                        <td class="text-center {{ $tClass }}" title="{{ $tTitle }}">
                                                             {{ $t ? date('d/m/Y', strtotime($t['tanggal'])) : '' }}</td>
-                                                        <td class="text-end">
+                                                        <td class="text-end {{ $tClass }}" title="{{ $tTitle }}">
                                                             {{ $t && $t['besar_pinjaman'] ? number_format($t['besar_pinjaman'], 0, ',', '.') : '' }}
                                                         </td>
-                                                        <td class="text-end">
+                                                        <td class="text-end {{ $tClass }}" title="{{ $tTitle }}">
                                                             {{ $t && $t['cicilan'] ? number_format($t['cicilan'], 0, ',', '.') : '' }}
                                                         </td>
-                                                        <td class="text-end fw-semibold">
+                                                        <td class="text-end fw-semibold {{ $tClass }}" title="{{ $tTitle }}">
                                                             {{ $t ? number_format($t['sisa_utang'], 0, ',', '.') : '' }}
                                                         </td>
-                                                        <td class="text-end">
+                                                        <td class="text-end {{ $tClass }}" title="{{ $tTitle }}">
                                                             {{ $t && $t['bagi_hasil'] ? number_format($t['bagi_hasil'], 0, ',', '.') : '' }}
                                                         </td>
-                                                        <td class="text-end">
+                                                        <td class="text-end {{ $tClass }}" title="{{ $tTitle }}">
                                                             {{ $t && $t['propisi'] ? number_format($t['propisi'], 0, ',', '.') : '' }}
                                                         </td>
-                                                        <td class="text-center small">{{ $t ? $t['paraf'] ?? '' : '' }}
+                                                        <td class="text-center small {{ $tClass }}" title="{{ $tTitle }}">{{ $t ? $t['paraf'] ?? '' : '' }}
                                                         </td>
 
-                                                        <!-- Kolom Kekayaan Anggota -->
-                                                        <td class="text-center border-divider-col">
+                                                        <!-- Kolom Kekayaan Anggota (Digabung 1 Baris per Tanggal, Klik per Sel Kategori) -->
+                                                        <td class="text-center border-divider-col {{ $sBaseClass }}" title="{{ $sBaseTitle }}"
+                                                            @if ($sSingle)
+                                                                data-s-type="{{ $sSingle['type'] }}"
+                                                                data-s-id="{{ $sSingle['id'] }}"
+                                                                data-s-group-ids="{{ $sSingle['group_ids'] }}"
+                                                                data-s-kategori="{{ $sSingle['id_kategori'] }}"
+                                                                data-s-tanggal="{{ date('Y-m-d', strtotime($sSingle['tanggal'])) }}"
+                                                                data-s-nominal="{{ $sSingle['nominal'] }}"
+                                                                data-s-pihak="{{ $sSingle['nama_pihak'] }}"
+                                                                data-s-keterangan="{{ $sSingle['keterangan'] }}"
+                                                            @endif
+                                                        >
                                                             {{ $s ? date('d/m/Y', strtotime($s['tanggal'])) : '' }}</td>
-                                                        <td class="text-end">
-                                                            {{ $s && $s['pokok'] ? number_format($s['pokok'], 0, ',', '.') : '' }}
-                                                        </td>
-                                                        <td class="text-end">
-                                                            {{ $s && $s['wajib'] ? number_format($s['wajib'], 0, ',', '.') : '' }}
-                                                        </td>
-                                                        <td class="text-end">
-                                                            {{ $s && $s['manasuka'] ? number_format($s['manasuka'], 0, ',', '.') : '' }}
-                                                        </td>
-                                                        <td class="text-end">
-                                                            {{ $s && $s['lebaran'] ? number_format($s['lebaran'], 0, ',', '.') : '' }}
-                                                        </td>
-                                                        <td class="text-end">
-                                                            {{ $s && $s['niaga'] ? number_format($s['niaga'], 0, ',', '.') : '' }}
-                                                        </td>
-                                                        <td class="text-end fw-semibold">
+
+                                                        @foreach (['pokok', 'wajib', 'manasuka', 'lebaran', 'niaga'] as $colKey)
+                                                            @php
+                                                                $cellData = $s['cells'][$colKey] ?? null;
+                                                                $activeCell = $cellData ?: $sSingle;
+                                                                $cellClass = $cellData ? 'cell-item-simpanan' : $sBaseClass;
+                                                                $cellTitle = $cellData
+                                                                    ? 'Klik untuk Edit / Hapus ' . $cellData['kategori_nama'] . ' (Rp ' . number_format($cellData['nominal'], 0, ',', '.') . ')'
+                                                                    : $sBaseTitle;
+                                                            @endphp
+                                                            <td class="text-end {{ $cellClass }}" title="{{ $cellTitle }}"
+                                                                @if ($activeCell)
+                                                                    data-s-type="{{ $activeCell['type'] }}"
+                                                                    data-s-id="{{ $activeCell['id'] }}"
+                                                                    data-s-group-ids="{{ $activeCell['group_ids'] }}"
+                                                                    data-s-kategori="{{ $activeCell['id_kategori'] }}"
+                                                                    data-s-tanggal="{{ date('Y-m-d', strtotime($activeCell['tanggal'])) }}"
+                                                                    data-s-nominal="{{ $activeCell['nominal'] }}"
+                                                                    data-s-pihak="{{ $activeCell['nama_pihak'] }}"
+                                                                    data-s-keterangan="{{ $activeCell['keterangan'] }}"
+                                                                @endif
+                                                            >
+                                                                {{ $s && $s[$colKey] ? number_format($s[$colKey], 0, ',', '.') : '' }}
+                                                            </td>
+                                                        @endforeach
+
+                                                        <td class="text-end fw-semibold {{ $sBaseClass }}" title="{{ $sBaseTitle }}"
+                                                            @if ($sSingle)
+                                                                data-s-type="{{ $sSingle['type'] }}"
+                                                                data-s-id="{{ $sSingle['id'] }}"
+                                                                data-s-group-ids="{{ $sSingle['group_ids'] }}"
+                                                                data-s-kategori="{{ $sSingle['id_kategori'] }}"
+                                                                data-s-tanggal="{{ date('Y-m-d', strtotime($sSingle['tanggal'])) }}"
+                                                                data-s-nominal="{{ $sSingle['nominal'] }}"
+                                                                data-s-pihak="{{ $sSingle['nama_pihak'] }}"
+                                                                data-s-keterangan="{{ $sSingle['keterangan'] }}"
+                                                            @endif
+                                                        >
                                                             {{ $s ? number_format($s['jumlah_simpanan'], 0, ',', '.') : '' }}
                                                         </td>
-                                                        <td class="text-end text-danger">
+
+                                                        @php
+                                                            $ambilCell = $s['cells']['pengambilan'] ?? null;
+                                                            $activeAmbil = $ambilCell ?: $sSingle;
+                                                            $ambilClass = $ambilCell ? 'cell-item-simpanan' : $sBaseClass;
+                                                            $ambilTitle = $ambilCell
+                                                                ? 'Klik untuk Edit / Hapus Penarikan ' . $ambilCell['kategori_nama'] . ' (Rp ' . number_format($ambilCell['nominal'], 0, ',', '.') . ')'
+                                                                : $sBaseTitle;
+                                                        @endphp
+                                                        <td class="text-end text-danger {{ $ambilClass }}" title="{{ $ambilTitle }}"
+                                                            @if ($activeAmbil)
+                                                                data-s-type="{{ $activeAmbil['type'] }}"
+                                                                data-s-id="{{ $activeAmbil['id'] }}"
+                                                                data-s-group-ids="{{ $activeAmbil['group_ids'] }}"
+                                                                data-s-kategori="{{ $activeAmbil['id_kategori'] }}"
+                                                                data-s-tanggal="{{ date('Y-m-d', strtotime($activeAmbil['tanggal'])) }}"
+                                                                data-s-nominal="{{ $activeAmbil['nominal'] }}"
+                                                                data-s-pihak="{{ $activeAmbil['nama_pihak'] }}"
+                                                                data-s-keterangan="{{ $activeAmbil['keterangan'] }}"
+                                                            @endif
+                                                        >
                                                             {{ $s && $s['pengambilan'] ? number_format($s['pengambilan'], 0, ',', '.') : '' }}
                                                         </td>
-                                                        <td class="text-center small">{{ $s ? $s['paraf'] ?? '' : '' }}
+
+                                                        <td class="text-center small {{ $sBaseClass }}" title="{{ $sBaseTitle }}"
+                                                            @if ($sSingle)
+                                                                data-s-type="{{ $sSingle['type'] }}"
+                                                                data-s-id="{{ $sSingle['id'] }}"
+                                                                data-s-group-ids="{{ $sSingle['group_ids'] }}"
+                                                                data-s-kategori="{{ $sSingle['id_kategori'] }}"
+                                                                data-s-tanggal="{{ date('Y-m-d', strtotime($sSingle['tanggal'])) }}"
+                                                                data-s-nominal="{{ $sSingle['nominal'] }}"
+                                                                data-s-pihak="{{ $sSingle['nama_pihak'] }}"
+                                                                data-s-keterangan="{{ $sSingle['keterangan'] }}"
+                                                            @endif
+                                                        >{{ $s ? $s['paraf'] ?? '' : '' }}
                                                         </td>
                                                     </tr>
                                                 @endforeach
@@ -1004,6 +1111,220 @@
                 </div>
             </div>
         </div>
+
+        <!-- =================================================================== -->
+        <!-- MODAL EDIT & HAPUS TRANSAKSI (OPSI B: KLIK LANGSUNG BARIS)         -->
+        <!-- =================================================================== -->
+
+        <!-- MODAL EDIT 1: Setoran Simpanan -->
+        <div class="modal fade" id="modalEditSimpanan" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <form id="formEditSimpanan" method="POST">
+                        @csrf
+                        <input type="hidden" name="group_ids" id="editSimpananGroupIds">
+                        <div class="modal-header bg-primary text-white">
+                            <h5 class="modal-title"><i class="bi bi-pencil-square me-2"></i> Koreksi / Hapus Setoran Simpanan</h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body p-4">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Kategori Simpanan <span class="text-danger">*</span></label>
+                                <select name="id_kategori" id="editSimpananKategori" class="form-select" required>
+                                    @foreach ($kategoriSimpanan as $kat)
+                                        <option value="{{ $kat->id }}">{{ $kat->nama }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Jumlah Setoran (Rp) <span class="text-danger">*</span></label>
+                                <input type="text" name="jumlah" id="editSimpananJumlah" class="form-control rupiah-input" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Tanggal Transaksi <span class="text-danger">*</span></label>
+                                <input type="date" name="tanggal" id="editSimpananTanggal" class="form-control" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Nama Penyetor</label>
+                                <input type="text" name="nama_penyetor" id="editSimpananPenyetor" class="form-control">
+                            </div>
+                            <div class="mb-0">
+                                <label class="form-label fw-bold">Keterangan</label>
+                                <input type="text" name="keterangan" id="editSimpananKeterangan" class="form-control">
+                            </div>
+                        </div>
+                        <div class="modal-footer bg-light d-flex justify-content-between">
+                            <button type="button" class="btn btn-outline-danger" id="btnDeleteSimpanan">
+                                <i class="bi bi-trash me-1"></i> Hapus Setoran
+                            </button>
+                            <div>
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                                <button type="submit" class="btn btn-primary"><i class="bi bi-save me-1"></i> Simpan Perubahan</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL EDIT 2: Penarikan / Pengambilan Simpanan -->
+        <div class="modal fade" id="modalEditPengambilan" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <form id="formEditPengambilan" method="POST">
+                        @csrf
+                        <input type="hidden" name="group_ids" id="editPengambilanGroupIds">
+                        <div class="modal-header bg-warning text-dark">
+                            <h5 class="modal-title fw-bold"><i class="bi bi-pencil-square me-2"></i> Koreksi / Hapus Penarikan Simpanan</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body p-4">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Kategori Tabungan <span class="text-danger">*</span></label>
+                                <select name="id_kategori" id="editPengambilanKategori" class="form-select" required>
+                                    @foreach ($kategoriSimpanan as $kat)
+                                        <option value="{{ $kat->id }}">{{ $kat->nama }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Nominal Penarikan (Rp) <span class="text-danger">*</span></label>
+                                <input type="text" name="jumlah" id="editPengambilanJumlah" class="form-control rupiah-input" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Tanggal Penarikan <span class="text-danger">*</span></label>
+                                <input type="date" name="tanggal" id="editPengambilanTanggal" class="form-control" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Nama Pengambil</label>
+                                <input type="text" name="nama_pengambil" id="editPengambilanPengambil" class="form-control">
+                            </div>
+                            <div class="mb-0">
+                                <label class="form-label fw-bold">Keterangan</label>
+                                <input type="text" name="keterangan" id="editPengambilanKeterangan" class="form-control">
+                            </div>
+                        </div>
+                        <div class="modal-footer bg-light d-flex justify-content-between">
+                            <button type="button" class="btn btn-outline-danger" id="btnDeletePengambilan">
+                                <i class="bi bi-trash me-1"></i> Hapus Penarikan
+                            </button>
+                            <div>
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                                <button type="submit" class="btn btn-warning text-dark fw-bold"><i class="bi bi-save me-1"></i> Simpan Perubahan</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL EDIT 3: Pinjaman (Pengajuan) -->
+        <div class="modal fade" id="modalEditPinjaman" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <form id="formEditPinjaman" method="POST">
+                        @csrf
+                        <div class="modal-header bg-danger text-white">
+                            <h5 class="modal-title"><i class="bi bi-pencil-square me-2"></i> Koreksi / Hapus Pinjaman</h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body p-4">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Besar Pinjaman (Rp) <span class="text-danger">*</span></label>
+                                <input type="text" name="nominal_pinjaman" id="editPinjamanNominal" class="form-control rupiah-input" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Propisi 1% (Rp)</label>
+                                <input type="text" name="propisi" id="editPinjamanPropisi" class="form-control rupiah-input">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Nominal Bagi Hasil (Rp)</label>
+                                <input type="text" name="nominal_bagihasil" id="editPinjamanBagiHasil" class="form-control rupiah-input">
+                            </div>
+                            <div class="mb-0">
+                                <label class="form-label fw-bold">Tanggal Pencairan <span class="text-danger">*</span></label>
+                                <input type="date" name="tanggal_pengajuan" id="editPinjamanTanggal" class="form-control" required>
+                            </div>
+                        </div>
+                        <div class="modal-footer bg-light d-flex justify-content-between">
+                            <button type="button" class="btn btn-outline-danger" id="btnDeletePinjaman">
+                                <i class="bi bi-trash me-1"></i> Hapus Pinjaman
+                            </button>
+                            <div>
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                                <button type="submit" class="btn btn-danger"><i class="bi bi-save me-1"></i> Simpan Perubahan</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL EDIT 4: Angsuran / Cicilan -->
+        <div class="modal fade" id="modalEditAngsuran" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <form id="formEditAngsuran" action="{{ route('kartu.angsuran.update') }}" method="POST">
+                        @csrf
+                        <input type="hidden" name="id_user" value="{{ $selectedUser->id }}">
+                        <input type="hidden" name="group_ids" id="editAngsuranGroupIds">
+                        <div class="modal-header bg-success text-white">
+                            <h5 class="modal-title"><i class="bi bi-pencil-square me-2"></i> Koreksi / Hapus Angsuran</h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body p-4">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Pinjaman Terkait <span class="text-danger">*</span></label>
+                                <select name="id_pengajuan" id="editAngsuranPengajuan" class="form-select" required>
+                                    @foreach ($pengajuanList as $pj)
+                                        <option value="{{ $pj->id }}">
+                                            Pinjaman Rp {{ number_format($pj->nominal_pinjaman, 0, ',', '.') }}
+                                            (Tgl: {{ date('d/m/Y', strtotime($pj->tanggal_pengajuan)) }} - {{ strtoupper($pj->keterangan) }})
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Cicilan Pokok Pinjaman (Rp)</label>
+                                <input type="text" name="nominal_angsuran" id="editAngsuranCicilan" class="form-control rupiah-input" placeholder="0">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Bagi Hasil (Rp)</label>
+                                <input type="text" name="nominal_bagihasil" id="editAngsuranBagiHasil" class="form-control rupiah-input" placeholder="0">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Tanggal Pembayaran <span class="text-danger">*</span></label>
+                                <input type="date" name="tanggal" id="editAngsuranTanggal" class="form-control" required>
+                            </div>
+                            <div class="mb-0">
+                                <label class="form-label fw-bold">Keterangan</label>
+                                <input type="text" name="keterangan" id="editAngsuranKeterangan" class="form-control">
+                            </div>
+                        </div>
+                        <div class="modal-footer bg-light d-flex justify-content-between">
+                            <button type="button" class="btn btn-outline-danger" id="btnDeleteAngsuran">
+                                <i class="bi bi-trash me-1"></i> Hapus Angsuran
+                            </button>
+                            <div>
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                                <button type="submit" class="btn btn-success"><i class="bi bi-save me-1"></i> Simpan Perubahan</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form Hidden untuk Aksi Hapus -->
+        <form id="formDeleteGeneric" method="POST" style="display: none;">
+            @csrf
+            <input type="hidden" name="group_ids" id="deleteGenericGroupIds">
+        </form>
+        <form id="formDeleteAngsuran" action="{{ route('kartu.angsuran.delete') }}" method="POST" style="display: none;">
+            @csrf
+            <input type="hidden" name="id_user" value="{{ $selectedUser->id }}">
+            <input type="hidden" name="group_ids" id="deleteAngsuranGroupIds">
+        </form>
     @endif
 
 @endsection
@@ -1018,6 +1339,11 @@
         function printSemuaLembar() {
             $('body').removeClass('print-only-active').addClass('print-all-sheets');
             window.print();
+        }
+
+        function formatRupiah(angka) {
+            var num = parseInt(angka) || 0;
+            return num > 0 ? new Intl.NumberFormat('id-ID').format(num) : '';
         }
 
         $(document).ready(function() {
@@ -1056,6 +1382,132 @@
                     $('#propisiInput').val(new Intl.NumberFormat('id-ID').format(propisi));
                 } else {
                     $('#propisiInput').val('0');
+                }
+            });
+
+            // Hitung propisi 1% otomatis pada modal Edit Pinjaman
+            $('#editPinjamanNominal').on('keyup', function() {
+                var val = parseInt($(this).val().replace(/[^0-9]/g, '')) || 0;
+                if (val > 0) {
+                    var propisi = Math.round(val * 0.01);
+                    $('#editPinjamanPropisi').val(new Intl.NumberFormat('id-ID').format(propisi));
+                } else {
+                    $('#editPinjamanPropisi').val('0');
+                }
+            });
+
+            // Highlight grup sel Kiri (Tagihan) atau Kanan (Simpanan) saat di-hover
+            $(document).on('mouseenter', '.cell-clickable-tagihan', function() {
+                $(this).closest('tr').find('.cell-clickable-tagihan').addClass('side-hover-tagihan');
+            }).on('mouseleave', '.cell-clickable-tagihan', function() {
+                $(this).closest('tr').find('.cell-clickable-tagihan').removeClass('side-hover-tagihan');
+            });
+
+            $(document).on('mouseenter', '.cell-clickable-simpanan', function() {
+                $(this).closest('tr').find('.cell-clickable-simpanan').addClass('side-hover-simpanan');
+            }).on('mouseleave', '.cell-clickable-simpanan', function() {
+                $(this).closest('tr').find('.cell-clickable-simpanan').removeClass('side-hover-simpanan');
+            });
+
+            // Klik Sisi Kiri: Buka Modal Edit/Hapus Pinjaman atau Angsuran
+            $(document).on('click', '.cell-clickable-tagihan', function() {
+                var tr = $(this).closest('tr');
+                var type = tr.attr('data-t-type');
+                var id = tr.attr('data-t-id');
+
+                if (type === 'pinjaman') {
+                    var nominal = tr.attr('data-t-pinjaman');
+                    var propisi = tr.attr('data-t-propisi');
+                    var bagihasilMaster = tr.attr('data-t-bagihasil-master');
+                    var tanggal = tr.attr('data-t-tanggal');
+
+                    $('#formEditPinjaman').attr('action', "{{ url('kartu-anggota/pinjaman/update') }}/" + id);
+                    $('#editPinjamanNominal').val(formatRupiah(nominal));
+                    $('#editPinjamanPropisi').val(formatRupiah(propisi));
+                    $('#editPinjamanBagiHasil').val(formatRupiah(bagihasilMaster));
+                    $('#editPinjamanTanggal').val(tanggal);
+
+                    $('#btnDeletePinjaman').off('click').on('click', function() {
+                        if (confirm('Yakin ingin menghapus data Pinjaman ini? Seluruh riwayat angsuran pada pinjaman ini juga akan ikut terhapus.')) {
+                            $('#formDeleteGeneric').attr('action', "{{ url('kartu-anggota/pinjaman/delete') }}/" + id).submit();
+                        }
+                    });
+
+                    $('#modalEditPinjaman').modal('show');
+                } else if (type === 'angsuran') {
+                    var groupIds = tr.attr('data-t-group-ids');
+                    var idPengajuan = tr.attr('data-t-pengajuan');
+                    var cicilan = tr.attr('data-t-cicilan');
+                    var bagihasil = tr.attr('data-t-bagihasil');
+                    var tanggal = tr.attr('data-t-tanggal');
+                    var keterangan = tr.attr('data-t-keterangan');
+
+                    $('#editAngsuranGroupIds').val(groupIds);
+                    $('#editAngsuranPengajuan').val(idPengajuan);
+                    $('#editAngsuranCicilan').val(formatRupiah(cicilan));
+                    $('#editAngsuranBagiHasil').val(formatRupiah(bagihasil));
+                    $('#editAngsuranTanggal').val(tanggal);
+                    $('#editAngsuranKeterangan').val(keterangan);
+
+                    $('#btnDeleteAngsuran').off('click').on('click', function() {
+                        if (confirm('Yakin ingin menghapus catatan pembayaran angsuran ini?')) {
+                            $('#deleteAngsuranGroupIds').val(groupIds);
+                            $('#formDeleteAngsuran').submit();
+                        }
+                    });
+
+                    $('#modalEditAngsuran').modal('show');
+                }
+            });
+
+            // Klik Sisi Kanan (Per-Sel Kategori Simpanan / Penarikan): Buka Modal Edit/Hapus
+            $(document).on('click', '.cell-item-simpanan', function() {
+                var td = $(this);
+                var type = td.attr('data-s-type');
+                var id = td.attr('data-s-id');
+                var groupIds = td.attr('data-s-group-ids') || id;
+                var kategori = td.attr('data-s-kategori');
+                var tanggal = td.attr('data-s-tanggal');
+                var nominal = td.attr('data-s-nominal');
+                var pihak = td.attr('data-s-pihak');
+                var keterangan = td.attr('data-s-keterangan');
+
+                if (!type || !id) return;
+
+                if (type === 'simpanan') {
+                    $('#formEditSimpanan').attr('action', "{{ url('kartu-anggota/simpanan/update') }}/" + id);
+                    $('#editSimpananGroupIds').val(groupIds);
+                    $('#editSimpananKategori').val(kategori);
+                    $('#editSimpananJumlah').val(formatRupiah(nominal));
+                    $('#editSimpananTanggal').val(tanggal);
+                    $('#editSimpananPenyetor').val(pihak);
+                    $('#editSimpananKeterangan').val(keterangan);
+
+                    $('#btnDeleteSimpanan').off('click').on('click', function() {
+                        if (confirm('Yakin ingin menghapus data setoran simpanan ini?')) {
+                            $('#deleteGenericGroupIds').val(groupIds);
+                            $('#formDeleteGeneric').attr('action', "{{ url('kartu-anggota/simpanan/delete') }}/" + id).submit();
+                        }
+                    });
+
+                    $('#modalEditSimpanan').modal('show');
+                } else if (type === 'pengambilan') {
+                    $('#formEditPengambilan').attr('action', "{{ url('kartu-anggota/pengambilan/update') }}/" + id);
+                    $('#editPengambilanGroupIds').val(groupIds);
+                    $('#editPengambilanKategori').val(kategori);
+                    $('#editPengambilanJumlah').val(formatRupiah(nominal));
+                    $('#editPengambilanTanggal').val(tanggal);
+                    $('#editPengambilanPengambil').val(pihak);
+                    $('#editPengambilanKeterangan').val(keterangan);
+
+                    $('#btnDeletePengambilan').off('click').on('click', function() {
+                        if (confirm('Yakin ingin menghapus data penarikan simpanan ini?')) {
+                            $('#deleteGenericGroupIds').val(groupIds);
+                            $('#formDeleteGeneric').attr('action', "{{ url('kartu-anggota/pengambilan/delete') }}/" + id).submit();
+                        }
+                    });
+
+                    $('#modalEditPengambilan').modal('show');
                 }
             });
 

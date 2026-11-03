@@ -20,9 +20,21 @@ Route::get('/dashboard', [DashboardController::class, 'index']);
 
 Route::get('/kartu-anggota', [KartuAnggotaController::class, 'index'])->name('kartu.anggota');
 Route::post('/kartu-anggota/simpanan', [KartuAnggotaController::class, 'storeSimpanan'])->name('kartu.simpanan.store');
+Route::post('/kartu-anggota/simpanan/update/{id}', [KartuAnggotaController::class, 'updateSimpanan'])->name('kartu.simpanan.update');
+Route::post('/kartu-anggota/simpanan/delete/{id}', [KartuAnggotaController::class, 'deleteSimpanan'])->name('kartu.simpanan.delete');
+
 Route::post('/kartu-anggota/pengambilan', [KartuAnggotaController::class, 'storePengambilan'])->name('kartu.pengambilan.store');
+Route::post('/kartu-anggota/pengambilan/update/{id}', [KartuAnggotaController::class, 'updatePengambilan'])->name('kartu.pengambilan.update');
+Route::post('/kartu-anggota/pengambilan/delete/{id}', [KartuAnggotaController::class, 'deletePengambilan'])->name('kartu.pengambilan.delete');
+
 Route::post('/kartu-anggota/pinjaman', [KartuAnggotaController::class, 'storePinjaman'])->name('kartu.pinjaman.store');
+Route::post('/kartu-anggota/pinjaman/update/{id}', [KartuAnggotaController::class, 'updatePinjaman'])->name('kartu.pinjaman.update');
+Route::post('/kartu-anggota/pinjaman/delete/{id}', [KartuAnggotaController::class, 'deletePinjaman'])->name('kartu.pinjaman.delete');
+
 Route::post('/kartu-anggota/bayar-angsuran', [KartuAnggotaController::class, 'storeBayarAngsuran'])->name('kartu.angsuran.store');
+Route::post('/kartu-anggota/bayar-angsuran/update', [KartuAnggotaController::class, 'updateBayarAngsuran'])->name('kartu.angsuran.update');
+Route::post('/kartu-anggota/bayar-angsuran/delete', [KartuAnggotaController::class, 'deleteBayarAngsuran'])->name('kartu.angsuran.delete');
+
 Route::post('/kartu-anggota/catatan', [KartuAnggotaController::class, 'updateCatatan'])->name('kartu.catatan.update');
 Route::get('/kartu-anggota/saldo/{userId}/{kategoriId}', [KartuAnggotaController::class, 'getSaldoKategori'])->name('kartu.saldo');
 
