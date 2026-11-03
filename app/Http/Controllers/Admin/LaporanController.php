@@ -330,7 +330,7 @@ class LaporanController extends Controller
         $data = [];
         $headings = ['No', 'Nama', 'Alamat'];
         foreach ($kategoriList as $k) {
-            if ($k->jenis && $k->jenis->nama === 'Tagihan' && $k->nama === 'Pinjaman') {
+            if ($k->jenis && $k->jenis->nama === 'Tagihan' && in_array(strtolower($k->nama), ['pinjaman', 'bagihasil', 'bagi hasil'])) {
                 continue;
             }
             $headings[] = $k->nama;
@@ -339,11 +339,11 @@ class LaporanController extends Controller
         $headings[] = 'Propisi';
         $headings[] = 'Pinjaman Terbayar';
         $headings[] = 'Sisa Pinjaman';
-        $headings[] = 'Nominal Bagi Hasil';
+        $headings[] = 'Bagi Hasil';
 
         $colTotals = [];
         foreach ($kategoriList as $k) {
-            if ($k->jenis && $k->jenis->nama === 'Tagihan' && $k->nama === 'Pinjaman') {
+            if ($k->jenis && $k->jenis->nama === 'Tagihan' && in_array(strtolower($k->nama), ['pinjaman', 'bagihasil', 'bagi hasil'])) {
                 continue;
             }
             $colTotals[$k->id] = 0;
@@ -381,7 +381,7 @@ class LaporanController extends Controller
             ];
 
             foreach ($kategoriList as $k) {
-                if ($k->jenis && $k->jenis->nama === 'Tagihan' && $k->nama === 'Pinjaman') {
+                if ($k->jenis && $k->jenis->nama === 'Tagihan' && in_array(strtolower($k->nama), ['pinjaman', 'bagihasil', 'bagi hasil'])) {
                     continue;
                 }
                 $amount = $lookup[$user->id][$k->id] ?? 0;
@@ -413,7 +413,7 @@ class LaporanController extends Controller
 
         $totalRow = ['', '', ''];
         foreach ($kategoriList as $k) {
-            if ($k->jenis && $k->jenis->nama === 'Tagihan' && $k->nama === 'Pinjaman') {
+            if ($k->jenis && $k->jenis->nama === 'Tagihan' && in_array(strtolower($k->nama), ['pinjaman', 'bagihasil', 'bagi hasil'])) {
                 continue;
             }
             $totalRow[] = $colTotals[$k->id] ?: '-';
@@ -496,7 +496,7 @@ class LaporanController extends Controller
         $data = [];
         $headings = ['No', 'Nama', 'Alamat'];
         foreach ($kategoriList as $k) {
-            if ($k->jenis && $k->jenis->nama === 'Tagihan' && $k->nama === 'Pinjaman') {
+            if ($k->jenis && $k->jenis->nama === 'Tagihan' && in_array(strtolower($k->nama), ['pinjaman', 'bagihasil', 'bagi hasil'])) {
                 continue;
             }
             $headings[] = $k->nama;
@@ -505,11 +505,11 @@ class LaporanController extends Controller
         $headings[] = 'Propisi';
         $headings[] = 'Pinjaman Terbayar';
         $headings[] = 'Sisa Pinjaman';
-        $headings[] = 'Nominal Bagi Hasil';
+        $headings[] = 'Bagi Hasil';
 
         $colTotals = [];
         foreach ($kategoriList as $k) {
-            if ($k->jenis && $k->jenis->nama === 'Tagihan' && $k->nama === 'Pinjaman') {
+            if ($k->jenis && $k->jenis->nama === 'Tagihan' && in_array(strtolower($k->nama), ['pinjaman', 'bagihasil', 'bagi hasil'])) {
                 continue;
             }
             $colTotals[$k->id] = 0;
@@ -550,7 +550,7 @@ class LaporanController extends Controller
             ];
 
             foreach ($kategoriList as $k) {
-                if ($k->jenis && $k->jenis->nama === 'Tagihan' && $k->nama === 'Pinjaman') {
+                if ($k->jenis && $k->jenis->nama === 'Tagihan' && in_array(strtolower($k->nama), ['pinjaman', 'bagihasil', 'bagi hasil'])) {
                     continue;
                 }
                 $amount = $lookup[$user->id][$k->id] ?? 0;
@@ -582,7 +582,7 @@ class LaporanController extends Controller
 
         $totalRow = ['', '', ''];
         foreach ($kategoriList as $k) {
-            if ($k->jenis && $k->jenis->nama === 'Tagihan' && $k->nama === 'Pinjaman') {
+            if ($k->jenis && $k->jenis->nama === 'Tagihan' && in_array(strtolower($k->nama), ['pinjaman', 'bagihasil', 'bagi hasil'])) {
                 continue;
             }
             $totalRow[] = $colTotals[$k->id] ?: '-';

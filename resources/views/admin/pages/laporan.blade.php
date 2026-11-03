@@ -20,11 +20,13 @@
                                                     class="form-control" value="{{ $selectedMonth ?? '' }}">
                                             </div>
                                             <div class="col-auto d-flex gap-2">
-                                                <button type="submit" class="btn btn-sm btn-icon btn-warning text-white" title="Filter">
+                                                <button type="submit" class="btn btn-sm btn-icon btn-warning text-white"
+                                                    title="Filter">
                                                     <i class="bi bi-funnel fs-18"></i>
                                                 </button>
                                                 @if (!empty($selectedMonth) || request()->is('laporan/filterdata*'))
-                                                    <a href="/laporan" class="btn btn-sm btn-secondary text-white d-flex align-items-center">
+                                                    <a href="/laporan"
+                                                        class="btn btn-sm btn-secondary text-white d-flex align-items-center">
                                                         Reset Filter
                                                     </a>
                                                 @endif
@@ -52,7 +54,11 @@
                             @php
                                 $colTotals = [];
                                 foreach ($kategori as $kat) {
-                                    if ($kat->jenis && $kat->jenis->nama == 'Tagihan' && $kat->nama == 'Pinjaman') {
+                                    if (
+                                        $kat->jenis &&
+                                        $kat->jenis->nama == 'Tagihan' &&
+                                        in_array(strtolower($kat->nama), ['pinjaman', 'bagihasil', 'bagi hasil'])
+                                    ) {
                                         continue;
                                     }
                                     $colTotals[$kat->id] = 0;
@@ -70,7 +76,10 @@
                                         <th>Nama</th>
                                         <th>Alamat</th>
                                         @foreach ($kategori as $item)
-                                            @if ($item->jenis && $item->jenis->nama == 'Tagihan' && $item->nama == 'Pinjaman')
+                                            @if (
+                                                $item->jenis &&
+                                                    $item->jenis->nama == 'Tagihan' &&
+                                                    in_array(strtolower($item->nama), ['pinjaman', 'bagihasil', 'bagi hasil']))
                                                 @php continue; @endphp
                                             @endif
                                             <th>{{ $item->nama }}</th>
@@ -79,7 +88,7 @@
                                         <th>Propisi</th>
                                         <th>Pinjaman Terbayar</th>
                                         <th>Sisa Pinjaman</th>
-                                        <th>Nominal Bagi Hasil</th>
+                                        <th>Bagi Hasil</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -102,7 +111,10 @@
                                             <td>{{ $item->name }}</td>
                                             <td>{{ $item->alamat }}</td>
                                             @foreach ($kategori as $data)
-                                                @if ($data->jenis && $data->jenis->nama == 'Tagihan' && $data->nama == 'Pinjaman')
+                                                @if (
+                                                    $data->jenis &&
+                                                        $data->jenis->nama == 'Tagihan' &&
+                                                        in_array(strtolower($data->nama), ['pinjaman', 'bagihasil', 'bagi hasil']))
                                                     @php continue; @endphp
                                                 @endif
                                                 @if ($data->jenis && $data->jenis->nama == 'Simpanan')
@@ -121,11 +133,16 @@
                                                     <td>-</td>
                                                 @endif
                                             @endforeach
-                                            <td>{{ $uPinjamanTotal > 0 ? 'Rp ' . number_format($uPinjamanTotal, 0, ',', '.') : 'Rp 0' }}</td>
-                                            <td>{{ $uPropisiTotal > 0 ? 'Rp ' . number_format($uPropisiTotal, 0, ',', '.') : '-' }}</td>
-                                            <td>{{ $uPinjamanDibayar > 0 ? 'Rp ' . number_format($uPinjamanDibayar, 0, ',', '.') : 'Rp 0' }}</td>
-                                            <td>{{ $uPinjamanSisa > 0 ? 'Rp ' . number_format($uPinjamanSisa, 0, ',', '.') : 'Rp 0' }}</td>
-                                            <td>{{ $uBagihasilTotal > 0 ? 'Rp ' . number_format($uBagihasilTotal, 0, ',', '.') : '-' }}</td>
+                                            <td>{{ $uPinjamanTotal > 0 ? 'Rp ' . number_format($uPinjamanTotal, 0, ',', '.') : 'Rp 0' }}
+                                            </td>
+                                            <td>{{ $uPropisiTotal > 0 ? 'Rp ' . number_format($uPropisiTotal, 0, ',', '.') : '-' }}
+                                            </td>
+                                            <td>{{ $uPinjamanDibayar > 0 ? 'Rp ' . number_format($uPinjamanDibayar, 0, ',', '.') : 'Rp 0' }}
+                                            </td>
+                                            <td>{{ $uPinjamanSisa > 0 ? 'Rp ' . number_format($uPinjamanSisa, 0, ',', '.') : 'Rp 0' }}
+                                            </td>
+                                            <td>{{ $uBagihasilTotal > 0 ? 'Rp ' . number_format($uBagihasilTotal, 0, ',', '.') : '-' }}
+                                            </td>
                                         </tr>
                                     @endforeach
                                 </tbody>
@@ -133,16 +150,25 @@
                                     <tr class="fw-bold">
                                         <th colspan="3" class="text-end">Total</th>
                                         @foreach ($kategori as $item)
-                                            @if ($item->jenis && $item->jenis->nama == 'Tagihan' && $item->nama == 'Pinjaman')
+                                            @if (
+                                                $item->jenis &&
+                                                    $item->jenis->nama == 'Tagihan' &&
+                                                    in_array(strtolower($item->nama), ['pinjaman', 'bagihasil', 'bagi hasil']))
                                                 @php continue; @endphp
                                             @endif
-                                            <th>{{ ($colTotals[$item->id] ?? 0) > 0 ? 'Rp ' . number_format($colTotals[$item->id], 0, ',', '.') : '-' }}</th>
+                                            <th>{{ ($colTotals[$item->id] ?? 0) > 0 ? 'Rp ' . number_format($colTotals[$item->id], 0, ',', '.') : '-' }}
+                                            </th>
                                         @endforeach
-                                        <th>{{ $grandPinjamanTotal > 0 ? 'Rp ' . number_format($grandPinjamanTotal, 0, ',', '.') : '-' }}</th>
-                                        <th>{{ $grandPropisiTotal > 0 ? 'Rp ' . number_format($grandPropisiTotal, 0, ',', '.') : '-' }}</th>
-                                        <th>{{ $grandPinjamanDibayar > 0 ? 'Rp ' . number_format($grandPinjamanDibayar, 0, ',', '.') : '-' }}</th>
-                                        <th>{{ $grandPinjamanSisa > 0 ? 'Rp ' . number_format($grandPinjamanSisa, 0, ',', '.') : '-' }}</th>
-                                        <th>{{ $grandBagihasilTotal > 0 ? 'Rp ' . number_format($grandBagihasilTotal, 0, ',', '.') : '-' }}</th>
+                                        <th>{{ $grandPinjamanTotal > 0 ? 'Rp ' . number_format($grandPinjamanTotal, 0, ',', '.') : '-' }}
+                                        </th>
+                                        <th>{{ $grandPropisiTotal > 0 ? 'Rp ' . number_format($grandPropisiTotal, 0, ',', '.') : '-' }}
+                                        </th>
+                                        <th>{{ $grandPinjamanDibayar > 0 ? 'Rp ' . number_format($grandPinjamanDibayar, 0, ',', '.') : '-' }}
+                                        </th>
+                                        <th>{{ $grandPinjamanSisa > 0 ? 'Rp ' . number_format($grandPinjamanSisa, 0, ',', '.') : '-' }}
+                                        </th>
+                                        <th>{{ $grandBagihasilTotal > 0 ? 'Rp ' . number_format($grandBagihasilTotal, 0, ',', '.') : '-' }}
+                                        </th>
                                     </tr>
                                 </tfoot>
                             </table>
