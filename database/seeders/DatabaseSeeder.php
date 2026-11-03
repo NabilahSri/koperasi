@@ -19,60 +19,38 @@ class DatabaseSeeder extends Seeder
     {
         // \App\Models\User::factory(10)->create();
 
-        \App\Models\User::factory()->create([
-            'no_user' => '001',
-            'name' => 'Admin Test',
-            'email' => 'admintest@gmail.com',
-            'alamat' => 'Tasikmalaya',
-            'nohp' => '081234567890',
-            'password' => bcrypt('12341234'),
-            'role' => 'admin',
-        ]);
+        \App\Models\User::firstOrCreate(
+            ['email' => 'admintest@gmail.com'],
+            [
+                'no_user' => '000',
+                'name' => 'Admin Test',
+                'alamat' => 'Tasikmalaya',
+                'nohp' => '081234567890',
+                'password' => bcrypt('12341234'),
+                'role' => 'admin',
+            ]
+        );
 
-        // \App\Models\User::factory()->create([
-        //     'no_user' => '002',
-        //     'name' => 'Nabilah Sri Mulyani',
-        //     'email' => 'nabilah@gmail.com',
-        //     'alamat' => 'Tasikmalaya',
-        //     'nohp' => '081234567890',
-        //     'password' => bcrypt('12341234'),
-        //     'role' => 'anggota',
-        // ]);
+        $jenisSimpanan = Jenis::firstOrCreate(['nama' => 'Simpanan']);
+        $jenisTagihan = Jenis::firstOrCreate(['nama' => 'Tagihan']);
 
-        Jenis::create([
-            'nama' => 'Simpanan'
-        ]);
+        Kategori::firstOrCreate(['id_jenis' => $jenisSimpanan->id, 'nama' => 'Iuran Pokok']);
+        Kategori::firstOrCreate(['id_jenis' => $jenisSimpanan->id, 'nama' => 'Iuran Wajib']);
+        Kategori::firstOrCreate(['id_jenis' => $jenisSimpanan->id, 'nama' => 'Niaga']);
+        Kategori::firstOrCreate(['id_jenis' => $jenisSimpanan->id, 'nama' => 'Manasuka']);
+        Kategori::firstOrCreate(['id_jenis' => $jenisSimpanan->id, 'nama' => 'Lebaran']);
 
-        Jenis::create([
-            'nama' => 'Tagihan'
-        ]);
+        Kategori::firstOrCreate(['id_jenis' => $jenisTagihan->id, 'nama' => 'Pinjaman']);
+        Kategori::firstOrCreate(['id_jenis' => $jenisTagihan->id, 'nama' => 'Bagihasil']);
 
-        Kategori::create([
-            'id_jenis' => '1',
-            'nama' => 'Iuran Pokok'
-        ]);
-
-        Kategori::create([
-            'id_jenis' => '1',
-            'nama' => 'Iuran Wajib'
-        ]);
-
-        Kategori::create([
-            'id_jenis' => '2',
-            'nama' => 'Pinjaman'
-        ]);
-
-        Kategori::create([
-            'id_jenis' => '2',
-            'nama' => 'Bagihasil'
-        ]);
-
-        Lembaga::create([
-            'nama' => 'Kopotren Al-Falah',
-            'nohp' => '081xxxx',
-            'alamat' => 'Isi sendiri',
-            'pimpinan' => 'Gak tau',
-            'logo' => ''
-        ]);
+        if (Lembaga::count() === 0) {
+            Lembaga::create([
+                'nama' => 'Kopotren Al-Falah',
+                'nohp' => '081xxxx',
+                'alamat' => 'Isi sendiri',
+                'pimpinan' => 'Gak tau',
+                'logo' => ''
+            ]);
+        }
     }
 }

@@ -8,9 +8,10 @@ use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Concerns\WithHeadings;
+use Maatwebsite\Excel\Concerns\WithStrictNullComparison;
 use Maatwebsite\Excel\Events\AfterSheet;
 
-class FilteredDataExport implements FromCollection, WithHeadings, ShouldAutoSize, WithEvents
+class FilteredDataExport implements FromCollection, WithHeadings, ShouldAutoSize, WithEvents, WithStrictNullComparison
 {
     use Exportable;
 
@@ -51,24 +52,31 @@ class FilteredDataExport implements FromCollection, WithHeadings, ShouldAutoSize
             AfterSheet::class => function(AfterSheet $event) {
                 $lastColumnIndex = count($this->headings);
                 $lastColumn = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($lastColumnIndex);
-                $cellRange = 'A1:' . $lastColumn . (count($this->data) + 1);
+                $totalRows = count($this->data) + 1;
+                $cellRange = 'A1:' . $lastColumn . $totalRows;
 
-                $event->sheet->getDelegate()->getStyle($cellRange)->getFont()->setSize(12);
+                $event->sheet->getDelegate()->getStyle($cellRange)->getFont()->setSize(11);
+                $event->sheet->getDelegate()->getRowDimension(1)->setRowHeight(28);
     
                 // Loop through each cell in the range to apply borders and formatting
                 for ($col = 1; $col <= $lastColumnIndex; $col++) {
                     $column = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($col);
 
-                    for ($row = 1; $row <= count($this->data) + 1; $row++) {
+                    for ($row = 1; $row <= $totalRows; $row++) {
                         // Apply a different style to header cells (row 1)
                         $headerStyle = ($row == 1) ? [
-                            'fill' => ['fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor' => ['rgb' => 'CCCCCC']],
+                            'fill' => ['fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor' => ['rgb' => 'B8CCE4']],
                             'font' => ['bold' => true, 'color' => ['rgb' => '000000']],
-                            'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER],
-                        ] : [];
+                            'alignment' => [
+                                'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
+                                'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
+                            ],
+                        ] : (($row == $totalRows) ? [
+                            'font' => ['bold' => true],
+                        ] : []);
     
                         // Format Rupiah mulai kolom D (index 4) karena kolom A-C adalah No, Nama, Alamat
-                        $format = ($col >= 4 && $row > 1) ? '_-"Rp"* #,##0_-;[Red]-"Rp"* #,##0_-' : null;
+                        $format = ($col >= 4 && $row > 1) ? '_-"Rp"* #,##0_-;[Red]-"Rp"* #,##0_-;_-"Rp"* #,##0_-' : null;
     
                         $event->sheet->getStyle($column . $row)->applyFromArray([
                             'borders' => [

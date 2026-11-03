@@ -73,7 +73,7 @@ Route::get('/pengaturan', [PengaturanController::class, 'index']);
 Route::post('/pengaturan/edit/{id}', [PengaturanController::class, 'edit']);
 
 Route::get('/laporan', [LaporanController::class, 'index']);
-Route::post('/laporan/filterdata', [LaporanController::class, 'filterData']);
+Route::match(['get', 'post'], '/laporan/filterdata', [LaporanController::class, 'filterData']);
 Route::get('/laporan/export', [LaporanController::class, 'export']);
 Route::get('/laporan/filterdata/export', [LaporanController::class, 'exportFilteredData']);
 
