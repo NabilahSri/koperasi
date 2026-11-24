@@ -50,13 +50,43 @@ class SimpananController extends Controller
         ]);
 
         $hasTransaction = false;
+        $kategoriMap = Kategori::pluck('nama', 'id')->map(fn ($n) => strtolower($n))->toArray();
+        $idKategoriNiaga = null;
+        foreach ($kategoriMap as $kId => $kNama) {
+            if (str_contains($kNama, 'niaga')) {
+                $idKategoriNiaga = $kId;
+                break;
+            }
+        }
+
+        $nominalWajibInput = 0;
+        $nominalNiagaInput = 0;
 
         foreach ($req->transaksi as $item) {
-            $jumlah = isset($item['jumlah']) ? preg_replace('/[^0-9]/', '', $item['jumlah']) : 0;
+            $katId = $item['id_kategori'] ?? null;
+            $jumlah = isset($item['jumlah']) ? (int) preg_replace('/[^0-9]/', '', (string) $item['jumlah']) : 0;
+            if ($katId && isset($kategoriMap[$katId])) {
+                if (str_contains($kategoriMap[$katId], 'wajib')) {
+                    $nominalWajibInput = $jumlah;
+                } elseif (str_contains($kategoriMap[$katId], 'niaga')) {
+                    $nominalNiagaInput = $jumlah;
+                }
+            }
+        }
+
+        foreach ($req->transaksi as $item) {
+            $katId = $item['id_kategori'] ?? null;
+            $jumlah = isset($item['jumlah']) ? (int) preg_replace('/[^0-9]/', '', (string) $item['jumlah']) : 0;
+
+            // Jika kategori Niaga kosong tetapi Simpanan Wajib diisi, otomatis isi 10% dari Simpanan Wajib
+            if ($katId == $idKategoriNiaga && $jumlah <= 0 && $nominalWajibInput > 0) {
+                $jumlah = (int) round($nominalWajibInput * 0.10);
+            }
+
             if ($jumlah > 0) {
                 TransaksiS::create([
                     'id_user' => $req->id_user,
-                    'id_kategori' => $item['id_kategori'],
+                    'id_kategori' => $katId,
                     'id_petugas' => $id_petugas,
                     'nama_penyetor' => $req->nama_penyetor,
                     'jumlah' => $jumlah,

@@ -903,17 +903,31 @@
                             <div class="mb-3">
                                 <label class="form-label fw-bold">Kategori Simpanan <span
                                         class="text-danger">*</span></label>
-                                <select name="id_kategori" class="form-select" required>
+                                <select name="id_kategori" id="addSimpananKategori" class="form-select" required>
                                     <option value="">-- Pilih Kategori --</option>
                                     @foreach ($kategoriSimpanan as $kat)
-                                        <option value="{{ $kat->id }}">{{ $kat->nama }}</option>
+                                        @if (!str_contains(strtolower($kat->nama), 'niaga'))
+                                            <option value="{{ $kat->id }}" data-nama="{{ strtolower($kat->nama) }}">{{ $kat->nama }}</option>
+                                        @endif
+                                    @endforeach
+                                    @foreach ($kategoriSimpanan as $kat)
+                                        @if (str_contains(strtolower($kat->nama), 'niaga'))
+                                            <option value="{{ $kat->id }}" data-nama="{{ strtolower($kat->nama) }}">{{ $kat->nama }} (Manual)</option>
+                                        @endif
                                     @endforeach
                                 </select>
                             </div>
                             <div class="mb-3">
                                 <label class="form-label fw-bold">Jumlah (Rp) <span class="text-danger">*</span></label>
-                                <input type="text" name="jumlah" class="form-control rupiah-input" placeholder="0"
+                                <input type="text" name="jumlah" id="addSimpananJumlah" class="form-control rupiah-input" placeholder="0"
                                     required>
+                            </div>
+                            <div class="mb-3" id="autoNiagaPreviewBox" style="display: none;">
+                                <label class="form-label fw-bold text-primary">
+                                    <i class="bi bi-magic me-1"></i> Simpanan Niaga Otomatis (10%)
+                                </label>
+                                <input type="text" id="autoNiagaPreviewInput" class="form-control bg-light fw-bold text-primary" value="0" readonly>
+                                <small class="text-muted" style="font-size: 11px;">Otomatis ditambahkan 10% dari Simpanan Wajib tanpa perlu input manual.</small>
                             </div>
                             <div class="mb-3">
                                 <label class="form-label fw-bold">Tanggal Transaksi <span
@@ -1437,6 +1451,24 @@
                     $(this).val('');
                 }
             });
+
+            // Hitung otomatis Simpanan Niaga 10% saat memilih/mengetik Simpanan Wajib di Modal Tambah Simpanan
+            function updateAutoNiagaPreview() {
+                var selectedOpt = $('#addSimpananKategori option:selected');
+                var katNama = (selectedOpt.attr('data-nama') || '').toLowerCase();
+                if (katNama.indexOf('wajib') !== -1) {
+                    $('#autoNiagaPreviewBox').slideDown(150);
+                    var valWajib = parseInt(($('#addSimpananJumlah').val() || '').replace(/[^0-9]/g, '')) || 0;
+                    var valNiaga = Math.round(valWajib * 0.10);
+                    $('#autoNiagaPreviewInput').val(valNiaga > 0 ? new Intl.NumberFormat('id-ID').format(valNiaga) : '0');
+                } else {
+                    $('#autoNiagaPreviewBox').slideUp(150);
+                    $('#autoNiagaPreviewInput').val('0');
+                }
+            }
+
+            $('#addSimpananKategori').on('change', updateAutoNiagaPreview);
+            $('#addSimpananJumlah').on('keyup input change', updateAutoNiagaPreview);
 
             // Hitung propisi 1% otomatis saat nominal pinjaman diketik
             $('#nominalPinjamanInput').on('keyup', function() {

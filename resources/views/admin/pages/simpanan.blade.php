@@ -330,6 +330,7 @@
                                                                     <input type="text"
                                                                         class="form-control fw-bold text-end rupiah-input"
                                                                         name="transaksi[{{ $item->id }}][jumlah]"
+                                                                        data-kategori-nama="{{ strtolower($item->nama) }}"
                                                                         placeholder="Rp 0">
                                                                 </div>
                                                             </div>
@@ -536,20 +537,40 @@
                 input.addEventListener('keyup', function(e) {
                     this.value = formatRupiah(this.value, 'Rp. ');
                     if (this.closest('#formCreateSimpanan')) {
+                        autoCalculateNiagaFromWajib(this);
                         updateTotalNominalAdd();
                     }
                 });
                 input.addEventListener('change', function() {
                     if (this.closest('#formCreateSimpanan')) {
+                        autoCalculateNiagaFromWajib(this);
                         updateTotalNominalAdd();
                     }
                 });
                 input.addEventListener('input', function() {
                     if (this.closest('#formCreateSimpanan')) {
+                        autoCalculateNiagaFromWajib(this);
                         updateTotalNominalAdd();
                     }
                 });
             });
+
+            function autoCalculateNiagaFromWajib(changedInput) {
+                const katNama = (changedInput.getAttribute('data-kategori-nama') || '').toLowerCase();
+                if (!katNama.includes('wajib')) return;
+
+                const form = document.getElementById('formCreateSimpanan');
+                if (!form) return;
+
+                const niagaInput = Array.from(form.querySelectorAll('input.rupiah-input[data-kategori-nama]'))
+                    .find(el => (el.getAttribute('data-kategori-nama') || '').toLowerCase().includes('niaga'));
+
+                if (niagaInput) {
+                    const wajibVal = parseRupiahToNumber(changedInput.value);
+                    const niagaVal = Math.round(wajibVal * 0.10);
+                    niagaInput.value = niagaVal > 0 ? formatRupiah(String(niagaVal), 'Rp. ') : '';
+                }
+            }
             document.querySelectorAll('form').forEach(form => {
                 form.addEventListener('submit', function(e) {
                     const currencyInputs = this.querySelectorAll('.currency-input, .rupiah-input');

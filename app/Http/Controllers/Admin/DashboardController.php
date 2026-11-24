@@ -42,7 +42,9 @@ class DashboardController extends Controller
         $data['total_admin'] = User::where('role', 'admin')->active()->count();
         $data['total_anggota'] = User::where('role', 'anggota')->active()->count();
 
-        $data['total_semua_simpanan'] = TransaksiS::whereHas('user', fn ($q) => $q->active())->sum('jumlah');
+        $totalSimpananMasuk = TransaksiS::whereHas('user', fn ($q) => $q->active())->sum('jumlah');
+        $totalSimpananKeluar = PengambilanSimpanan::whereHas('user', fn ($q) => $q->active())->sum('jumlah');
+        $data['total_semua_simpanan'] = max(0, $totalSimpananMasuk - $totalSimpananKeluar);
         $data['total_semua_tagihan'] = Pengajuan::whereHas('user', fn ($q) => $q->active())->sum('nominal_pinjaman')
             + Pengajuan::whereHas('user', fn ($q) => $q->active())->sum('nominal_bagihasil');
 

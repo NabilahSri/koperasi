@@ -67,6 +67,8 @@ class LaporanController extends Controller
         foreach ($pengambilan as $p) {
             $data['pengambilan'][$p->id_user][$p->id_kategori] = $p->jumlah;
             $data['pengambilan_total'][$p->id_user] = ($data['pengambilan_total'][$p->id_user] ?? 0) + $p->jumlah;
+            $currentSimp = $data['simpanan'][$p->id_user][$p->id_kategori] ?? 0;
+            $data['simpanan'][$p->id_user][$p->id_kategori] = max(0, $currentSimp - $p->jumlah);
             if (in_array($p->id_kategori, $manasukaIds)) {
                 $data['pengambilan_manasuka_total'][$p->id_user] = ($data['pengambilan_manasuka_total'][$p->id_user] ?? 0) + $p->jumlah;
             }
@@ -226,6 +228,8 @@ class LaporanController extends Controller
         foreach ($pengambilan as $p) {
             $data['pengambilan'][$p->id_user][$p->id_kategori] = $p->jumlah;
             $data['pengambilan_total'][$p->id_user] = ($data['pengambilan_total'][$p->id_user] ?? 0) + $p->jumlah;
+            $currentSimp = $data['simpanan'][$p->id_user][$p->id_kategori] ?? 0;
+            $data['simpanan'][$p->id_user][$p->id_kategori] = max(0, $currentSimp - $p->jumlah);
             if (in_array($p->id_kategori, $manasukaIds)) {
                 $data['pengambilan_manasuka_total'][$p->id_user] = ($data['pengambilan_manasuka_total'][$p->id_user] ?? 0) + $p->jumlah;
             }
@@ -322,6 +326,10 @@ class LaporanController extends Controller
         $lookup = [];
         foreach ($simpananData as $s) {
             $lookup[$s->id_user][$s->id_kategori] = $s->jumlah;
+        }
+        foreach ($pengambilanData as $p) {
+            $currentSimp = $lookup[$p->id_user][$p->id_kategori] ?? 0;
+            $lookup[$p->id_user][$p->id_kategori] = max(0, $currentSimp - $p->jumlah);
         }
         foreach ($tagihanData as $t) {
             $lookup[$t->id_user][$t->id_kategori] = $t->jumlah;
@@ -488,6 +496,10 @@ class LaporanController extends Controller
         $lookup = [];
         foreach ($simpananData as $s) {
             $lookup[$s->id_user][$s->id_kategori] = $s->jumlah;
+        }
+        foreach ($pengambilanData as $p) {
+            $currentSimp = $lookup[$p->id_user][$p->id_kategori] ?? 0;
+            $lookup[$p->id_user][$p->id_kategori] = max(0, $currentSimp - $p->jumlah);
         }
         foreach ($tagihanData as $t) {
             $lookup[$t->id_user][$t->id_kategori] = $t->jumlah;

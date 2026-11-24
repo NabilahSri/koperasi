@@ -230,6 +230,22 @@ class KartuAnggotaController extends Controller
                 $jumlahAmbil = (int) $ps->jumlah;
                 $totalPengambilan += $jumlahAmbil;
 
+                // Kurangi saldo akhir pada kategori yang ditarik
+                $katNamaAmbil = strtolower($ps->kategori->nama ?? '');
+                if (str_contains($katNamaAmbil, 'pokok')) {
+                    $totalSimpPokok = max(0, $totalSimpPokok - $jumlahAmbil);
+                } elseif (str_contains($katNamaAmbil, 'wajib')) {
+                    $totalSimpWajib = max(0, $totalSimpWajib - $jumlahAmbil);
+                } elseif (str_contains($katNamaAmbil, 'manasuka')) {
+                    $totalSimpManasuka = max(0, $totalSimpManasuka - $jumlahAmbil);
+                } elseif (str_contains($katNamaAmbil, 'lebaran')) {
+                    $totalSimpLebaran = max(0, $totalSimpLebaran - $jumlahAmbil);
+                } elseif (str_contains($katNamaAmbil, 'niaga')) {
+                    $totalSimpNiaga = max(0, $totalSimpNiaga - $jumlahAmbil);
+                } else {
+                    $totalSimpManasuka = max(0, $totalSimpManasuka - $jumlahAmbil);
+                }
+
                 $simpananEvents->push([
                     'type' => 'pengambilan',
                     'col' => 'pengambilan',
@@ -425,21 +441,50 @@ class KartuAnggotaController extends Controller
         ]);
 
         $user = User::findOrFail($request->id_user);
+        $kategori = Kategori::findOrFail($request->id_kategori);
         $nominal = (int) preg_replace('/[^0-9]/', '', (string) $request->jumlah);
 
         if ($nominal <= 0) {
             return redirect()->back()->with('error', 'Nominal simpanan harus lebih dari 0.');
         }
 
+        $petugasId = Auth::id() ?? 1;
+        $namaPenyetor = $request->nama_penyetor ?: $user->name;
+        $keterangan = $request->keterangan ?: 'Setoran Simpanan';
+
         TransaksiS::create([
             'id_user' => $user->id,
-            'id_kategori' => $request->id_kategori,
-            'id_petugas' => Auth::id() ?? 1,
-            'nama_penyetor' => $request->nama_penyetor ?: $user->name,
+            'id_kategori' => $kategori->id,
+            'id_petugas' => $petugasId,
+            'nama_penyetor' => $namaPenyetor,
             'jumlah' => $nominal,
             'tanggal' => $request->tanggal,
-            'keterangan' => $request->keterangan ?: 'Setoran Simpanan',
+            'keterangan' => $keterangan,
         ]);
+
+        // Otomatis tambahkan Simpanan Niaga 10% jika yang diinput adalah Simpanan/Iuran Wajib
+        if (str_contains(strtolower($kategori->nama), 'wajib')) {
+            $kategoriNiaga = Kategori::where('id_jenis', $kategori->id_jenis)
+                ->where('nama', 'like', '%niaga%')
+                ->first();
+
+            $nominalNiaga = (int) round($nominal * 0.10);
+
+            if ($kategoriNiaga && $nominalNiaga > 0) {
+                TransaksiS::create([
+                    'id_user' => $user->id,
+                    'id_kategori' => $kategoriNiaga->id,
+                    'id_petugas' => $petugasId,
+                    'nama_penyetor' => $namaPenyetor,
+                    'jumlah' => $nominalNiaga,
+                    'tanggal' => $request->tanggal,
+                    'keterangan' => $request->keterangan ?: 'Simpanan Niaga (10% Simpanan Wajib)',
+                ]);
+
+                return redirect()->route('kartu.anggota', ['user_id' => $user->id])
+                    ->with('success', 'Setoran Simpanan Wajib beserta Simpanan Niaga (10%: Rp ' . number_format($nominalNiaga, 0, ',', '.') . ') berhasil dicatat.');
+            }
+        }
 
         return redirect()->route('kartu.anggota', ['user_id' => $user->id])
             ->with('success', 'Setoran simpanan berhasil dicatat.');
@@ -685,6 +730,8 @@ class KartuAnggotaController extends Controller
             }
         }
 
+        $tanggalLama = $simpanan->tanggal;
+
         $simpanan->update([
             'id_kategori' => $newKategoriId,
             'nama_penyetor' => $request->nama_penyetor ?: $simpanan->nama_penyetor,
@@ -697,6 +744,46 @@ class KartuAnggotaController extends Controller
         $extraIds = array_diff($groupIds, [$simpanan->id]);
         if (!empty($extraIds)) {
             TransaksiS::where('id_user', $userId)->whereIn('id', $extraIds)->delete();
+        }
+
+        // Jika yang diedit adalah Simpanan Wajib, otomatis sesuaikan juga Simpanan Niaga (10%) pada tanggal tersebut
+        $kategoriBaru = Kategori::find($newKategoriId);
+        if ($kategoriBaru && str_contains(strtolower($kategoriBaru->nama), 'wajib')) {
+            $kategoriNiaga = Kategori::where('id_jenis', $kategoriBaru->id_jenis)
+                ->where('nama', 'like', '%niaga%')
+                ->first();
+
+            if ($kategoriNiaga) {
+                $nominalNiagaBaru = (int) round($nominalBaru * 0.10);
+                $niagaRecords = TransaksiS::where('id_user', $userId)
+                    ->where('id_kategori', $kategoriNiaga->id)
+                    ->where('tanggal', $tanggalLama)
+                    ->orderBy('id', 'asc')
+                    ->get();
+
+                if ($niagaRecords->isNotEmpty()) {
+                    $firstNiaga = $niagaRecords->first();
+                    $firstNiaga->update([
+                        'jumlah' => $nominalNiagaBaru,
+                        'tanggal' => $request->tanggal,
+                        'nama_penyetor' => $request->nama_penyetor ?: $firstNiaga->nama_penyetor,
+                    ]);
+                    $extraNiagaIds = $niagaRecords->pluck('id')->diff([$firstNiaga->id])->toArray();
+                    if (!empty($extraNiagaIds)) {
+                        TransaksiS::where('id_user', $userId)->whereIn('id', $extraNiagaIds)->delete();
+                    }
+                } elseif ($nominalNiagaBaru > 0) {
+                    TransaksiS::create([
+                        'id_user' => $userId,
+                        'id_kategori' => $kategoriNiaga->id,
+                        'id_petugas' => Auth::id() ?? 1,
+                        'nama_penyetor' => $request->nama_penyetor ?: $simpanan->nama_penyetor,
+                        'jumlah' => $nominalNiagaBaru,
+                        'tanggal' => $request->tanggal,
+                        'keterangan' => 'Simpanan Niaga (10% Simpanan Wajib)',
+                    ]);
+                }
+            }
         }
 
         return redirect()->route('kartu.anggota', ['user_id' => $userId])
